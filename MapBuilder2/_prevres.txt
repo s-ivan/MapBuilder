@@ -1,0 +1,42 @@
+// resolution x
+1366
+// resolution y
+768
+// video_screen: 1 full / 2 window
+2
+// fps_max
+49.979
+// fps_min
+10.296
+// preload_mode: 1 3 7 15
+7
+// tex_share: 0 off / 1 on
+1
+// d3d_triplebuffer: 0 off / 1 on
+1
+// d3d_entsort: 1 2 5 6
+2
+// d3d_alpharef: 0_255
+100
+// d3d_anisotropy: 0_7
+4
+// d3d_mipmapping: 0 1 3 4
+4
+// d3d_antialias: 0 1 4 9
+0
+// engine edition: 0 free/extra / 1 comm/pro
+2
+// shadow_stencil: -1 shade-c / 0 decal / 1 declal and stencil / 8 pssm
+-1
+// shadow_lod: 0 off / 1 2 3 shift
+0
+// hdr: 0 off / 1 on
+2
+// blur: 0 off / 01-4 on
+0
+// decal mode: 0 all ent_decal / 1 shrub decal shadow / 2 obstacle decal shadow / 3 mapentity decal shadow
+0
+// water: -1 texture water / 0 default mirror water / 1-2 basic shade-c water / 3-4 shade-c water with dynamic depth
+4
+// terrain lod: 0 no lod / 1 terrain cache (Pro) / 2-4 use terrain lod stages 1-3 (Pro)
+3

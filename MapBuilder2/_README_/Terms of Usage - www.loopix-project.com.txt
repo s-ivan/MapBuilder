@@ -1,0 +1,10 @@
+Terms of use
+
+This is freeware! You may use all content included in "MystyMood" freely in your projects.
+You may not sell the sources (scripts, models, textures) nor derivates of MystyMood in any way.
+
+Credits to "loopix-project.com" is required (contact me if you can't give credits...we'll find a solution).
+
+I don't take any responsability for any damage (financial loss, hardware damage, health damage etc.) caused by the use of "MystyMood" content.
+
+All copyrights remain at www.loopix-project.com 

@@ -1,0 +1,15 @@
+// wmpio (1.30), 26.04.2014
+
+version 711
+
+
+{ //level
+	0
+	MapBuilder.$$w
+	palette.pcx
+}
+{ //sun
+	5
+	0
+	60
+}

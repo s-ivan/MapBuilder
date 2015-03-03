@@ -1,0 +1,12 @@
+// reference tile size
+32
+// area x in tiles
+5
+// area y in tiles
+7
+// shadow type
+2
+// tile passability
+0
+// entity collision
+1

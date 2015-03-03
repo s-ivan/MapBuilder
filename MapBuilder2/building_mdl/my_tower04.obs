@@ -1,0 +1,12 @@
+// tile size
+32
+// area x in tiles
+5
+// area y in tiles
+5
+// shadow
+1
+// passability
+0
+// collision
+1

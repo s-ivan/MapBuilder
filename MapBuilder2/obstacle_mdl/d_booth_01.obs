@@ -1,0 +1,12 @@
+// reference tile size // 32 by default // min 16 // max 100
+32
+// area width in tiles
+2
+// area height in tiles
+2
+// shadow type // 0 no shadow // 1 dynamic shadow // 2 decal shadow // 3 model shadow
+2
+// tile type // 0 no access // 1 terrain default // 2 building // 3 forest
+0
+// collision type // 0 passable // 1 polygon // 2 tile area based
+2

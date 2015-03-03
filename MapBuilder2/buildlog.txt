@@ -1,0 +1,106 @@
+
+-dialog rts_testlevel1.$$m -pal rts_testlevel1palette.pcx 
+-az 314 -el 34 
+-sunrgb 90 84 76 
+-ambrgb 18 18 18  
+-fog1 39 37 40  
+-fog2 81 90 100  
+-fog3 25 23 32  
+-fog4 14 14 19  -noportals -hiprec -writelog -mesh -mergeacross -solidsky -nodetail -supsam -threads 4 -gamma 1.50 -phongangle 120  -lmambient 25  -sizeshaded 996 -sizeflat 996 -sizeturb 996 -litres 0.01 -litcomp 0.50 -litmax 196 -litscale 0.50 -radsubdiv 255 -radbounce 0 -bound 56000 -fat 64  48  8  -narrow 32  32  0  
+WMP to WMB Compiler V7.35 (WMB7 BSP) [CPUs: 4]
+ Report mode: DEFAULT
+
+Initialize map  ... [Load map] ...  ok 
+Placing 188 objects ..... ok 
+Prepare lighting ... ok 
+Generating 1 direct lights ... ok 
+Radiosity disabled. 
+Generating lightmaps ... ok
+Generating meshes ... ok
+Writing WMB file ... 
+0 vertices 
+0 visible surfaces 
+0 textures 
+Texture	space 1 Kb 
+1 regions ok
+ 
+Time:   0.0 sec
+
+ 
+-dialog rts_testlevel1.$$m -pal rts_testlevel1palette.pcx 
+-az 315 -el 50 
+-sunrgb 56 49 43 
+-ambrgb 17 17 17  
+-fog1 39 37 40  
+-fog2 70 81 95  
+-fog3 25 23 32  
+-fog4 14 14 19  -noportals -hiprec -writelog -mesh -mergeacross -solidsky -nodetail -supsam -threads 4 -gamma 1.50 -phongangle 120  -lmambient 25  -sizeshaded 996 -sizeflat 996 -sizeturb 996 -litres 0.01 -litcomp 0.50 -litmax 196 -litscale 0.50 -radsubdiv 255 -radbounce 0 -bound 56000 -fat 64  48  8  -narrow 32  32  0  
+WMP to WMB Compiler V7.35 (WMB7 BSP) [CPUs: 4]
+ Report mode: DEFAULT
+
+Initialize map  ... [Load map] ...  ok 
+Placing 3 objects ..... ok 
+Prepare lighting ... ok 
+Generating 1 direct lights ... ok 
+Radiosity disabled. 
+Generating lightmaps ... ok
+Generating meshes ... ok
+Writing WMB file ... 
+0 vertices 
+0 visible surfaces 
+0 textures 
+Texture	space 1 Kb 
+1 regions ok
+ 
+Time:   1.0 sec
+
+ 
+-dialog MapBuilder.$$M -pal palette.pcx -az 0 -el 60 -sunrgb 58 58 58 -ambrgb 19 19 19  -fog1 100 100 100  -fog2 19 39 100  -fog3 100 19 19 -noportals -hiprec -writelog -mesh -mergeacross -solidsky -nodetail -supsam -threads 4 -gamma 1.50 -phongangle 120  -lmambient 25  -sizeshaded 996 -sizeflat 996 -sizeturb 996 -litres 0.01 -litcomp 0.50 -litmax 196 -litscale 0.50 -radsubdiv 255 -radbounce 0 -bound 56000 -fat 64  48  8  -narrow 32  32  0  
+WMP to WMB Compiler V7.35 (WMB7 BSP) [CPUs: 4]
+ Report mode: DEFAULT
+
+Initialize map  ... [Load map] ...  ok 
+Placing 1 objects ..... ok 
+Prepare lighting ... ok 
+Generating 1 direct lights ... ok 
+Radiosity disabled. 
+Generating lightmaps ... ok
+Generating meshes ... ok
+Writing WMB file ... 
+0 vertices 
+0 visible surfaces 
+0 textures 
+Texture	space 1 Kb 
+1 regions ok
+ 
+Time:   0.0 sec
+
+ 
+-dialog test.$$m -pal testpalette.pcx 
+-az 64 -el 39 
+-sunrgb 100 81 66 
+-ambrgb 18 18 18  
+-fog1 39 37 40  
+-fog2 61 58 59  
+-fog3 25 23 32  
+-fog4 14 14 19  -noportals -hiprec -writelog -mesh -mergeacross -solidsky -nodetail -supsam -threads 4 -gamma 1.50 -phongangle 120  -lmambient 25  -sizeshaded 996 -sizeflat 996 -sizeturb 996 -litres 0.33 -litcomp 0.50 -litmax 196 -litscale 0.50 -radsubdiv 255 -radbounce 0 -noportals -nobsp -bound 56000 -fat 64  48  8  -narrow 32  32  0  
+WMP to WMB Compiler V7.35 (WMB7) [CPUs: 4]
+ Report mode: DEFAULT
+
+Initialize map  ... [Load map] ...  ok 
+Placing 223 objects ..... ok 
+Prepare lighting ... ok 
+Generating 1 direct lights ... ok 
+Radiosity disabled. 
+Generating lightmaps ... ok
+Generating meshes ... ok
+Writing WMB file ... 
+0 vertices 
+0 visible surfaces 
+0 textures 
+Texture	space 1 Kb 
+1 regions ok
+ 
+Time:   1.0 sec
+
+ 
