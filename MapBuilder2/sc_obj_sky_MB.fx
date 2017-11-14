@@ -11,7 +11,7 @@ float4x4 matWorldViewProj;
 float4x4 matWorld;
 float4x4 matTexture;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecEmissive;
@@ -87,7 +87,7 @@ outSkyVS SkyVS
 	//----------------------------------------------------------------
 	// lighting		
 	
-	Out.Color = 2.0f * ((vecAmbient * vecLight) + (vecEmissive * vecColor));					
+	Out.Color = (vecAmbient + vecEmissive) + vecColor;								// ambient + emissive + rgb			
 	
    //-----------------------------------------------------------------
 {}

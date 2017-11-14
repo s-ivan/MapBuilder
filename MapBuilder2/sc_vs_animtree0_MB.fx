@@ -103,7 +103,7 @@ outAnimTree1lVS AnimTree1VS
 	//----------------------------------------------------------------
 	// lighting
 	
-	Out.Color = (vecAmbient * vecLight) + (vecEmissive * vecColor);			// ambient + emissive
+	Out.Color = (vecAmbient + vecEmissive) + vecColor;								// ambient + emissive + rgb
 		
 {}
 #ifndef PER_PIXEL_LIGHTS

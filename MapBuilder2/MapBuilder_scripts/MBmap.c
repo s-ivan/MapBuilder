@@ -930,7 +930,7 @@ void Map_LoadMap_trr(char* file_name)
 //			map_mapclusters = str_to_int( temp_str );						// not needed, and not used any more
 			
 			file_str_read( file_handle , temp_str );
-			SetMapTileSize( str_to_int( temp_str ) );
+			SetMapTileSize( str_to_num( temp_str ) );
 		
 			file_str_read( file_handle , temp_str );
 			SetMapClusterSize( str_to_int( temp_str ) );
@@ -1127,9 +1127,10 @@ sys_marker("bmd");
 		
 	Sky_DefaultInit();															// default sky settings with a sky cube image and default camera, sun, lod, fog settings
 	wait_for(Sky_DefaultInit);	
+	wait(1);
 	
 #ifndef MB_RELEASE	
-	play02_map_tilesize	= (var)GetMapTileSize();						// variables read by RTS debug shaders
+	play02_map_tilesize	= GetMapTileSize();								// variables read by RTS debug shaders
 	play02_map_maptilesx	= (var)GetMapTilesX();
 	play02_map_maptilesy	= (var)GetMapTilesY();
 #endif
@@ -1145,6 +1146,8 @@ sys_marker("bmd");
 					Scsm_Start();			
 				}
 		}
+	
+	wait(5);
 	
 	//-----------------------------------------------------------
 	// start Editor Menu system

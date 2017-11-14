@@ -23,7 +23,7 @@ float4 vecSunColor;
 float4 vecSunDir;
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -43,6 +43,10 @@ float4 vecSkill41;
 
 #ifdef HEIGHT_FOG
 	#include "sc_heightfog_MB.fx"			// blend distance fog with height fog
+#endif
+
+#ifdef DEBUG_TILE
+	#include "rts_tiledarea_MB.fx"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

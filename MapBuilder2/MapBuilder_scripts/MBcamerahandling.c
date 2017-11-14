@@ -344,8 +344,8 @@ action Camera_Object_RTS()
 					
 					if (HIT_TARGET) 
 						{
-							 camera.z = maxv( camera.z , hit.z + (var)GetMapTileSize() );						 
-	//						 camera.z = maxv( camera.z , 0     + (var)GetMapTileSize() );		// ?		 
+							 camera.z = maxv( camera.z , hit.z + GetMapTileSize() );						 
+	//						 camera.z = maxv( camera.z , 0     + GetMapTileSize() );		// ?		 
 							 camera_height  = camera.z;
 						}			
 					camera.x = my.x + camera_height * cos(camera_angle); 
@@ -481,8 +481,8 @@ void		Camera_ShowPosition()
 			return;
 		}
 	
-//	square_z = (var)Entity_GetZPos3D(&camera_tilesquare, GetMapZLevels());												// notokay
-	square_z = (var)Vector_GetZPos3D(camera_tilesquare.x, GetMapZLevels());												// okay
+//	square_z = (var)Entity_GetZPos3D(camera_tilesquare, GetMapZLevels());												// with & notokay because global vector pointer
+	square_z = (var)Vector_GetZPos3D(camera_tilesquare.x, GetMapZLevels());												// okay - in game mode it should use terrain_map_levels because it might be lower than GetMapZLevels()
 //	if ( AbsTileValid(square_abs) )																									// okay
 //		{						
 //			square_z = 0;														// 0-1-2

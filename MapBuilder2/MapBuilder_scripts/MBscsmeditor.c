@@ -329,6 +329,7 @@ void		Sky_Scsm_Apply()
 	
 	Scsm_Close();
 	wait_for(Scsm_Close);
+	wait(3);
 	
 	scsm_resolution 	= sky_scsm_resolution;
 	scsm_areasize		= sky_scsm_areasize;

@@ -2,6 +2,7 @@
 #ifndef MBmaterials_h
 #define MBmaterials_h
 
+
 ////////////////////////////////////
 // materials
 
@@ -159,6 +160,8 @@ MATERIAL* mtl_tree =
 	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
 	power = 5;
 	albedo = 100;
+	
+//	event = sc_tree_billboard_event;
 }
 
 MATERIAL* mtl_decalshadow =															// not needed to be modifyable
@@ -181,33 +184,41 @@ MATERIAL* mtl_placementarea =															// not needed to be modifyable
 	albedo = 100;
 }
 
+//MATERIAL* mtl_wireframe_mb =
+//{
+//	ambient_red = 255; 		ambient_green = 20; 		ambient_blue = 20;
+//	
+//	effect = "technique wireframe { pass one { Fillmode = Wireframe; } }";
+//}
+
 //----------------------
+// rts unit tests
 
-// with shader - with alpha
-MATERIAL* mtl_unit_ca_nh_s =
-{
-	effect = "specBumpMBa.fx";			// okay, maybe faster													- requires: color+alpha , normal+_ 		 , _+specular		// but okay with normal+height
-//	effect = "specParallaxMBa.fx";	// okay but split in model where uv map not continuous 		- requires: color+alpha , normal+height , _+specular
-	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
-	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
-	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
-	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
-	power = 5;
-	albedo = 100;
-}
+//// with shader - with alpha
+//MATERIAL* mtl_unit_ca_nh_s =
+//{
+//	effect = "specBumpMBa.fx";			// okay, maybe faster													- requires: color+alpha , normal+_ 		 , _+specular		// but okay with normal+height
+////	effect = "specParallaxMBa.fx";	// okay but split in model where uv map not continuous 		- requires: color+alpha , normal+height , _+specular
+//	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
+//	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
+//	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
+//	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
+//	power = 5;
+//	albedo = 100;
+//}
 
-// with shader
-MATERIAL* mtl_unit_c_nh_s =
-{
-	effect = "specBumpMB.fx";			// okay, maybe faster													- requires: color , normal+_ 		 , _+specular				// but okay with normal+height
-//	effect = "specParallaxMB.fx";		// okay but split in model where uv map not continuous 		- requires: color , normal+height , _+specular
-	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
-	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
-	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
-	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
-	power = 5;
-	albedo = 100;
-}
+//// with shader
+//MATERIAL* mtl_unit_c_nh_s =
+//{
+//	effect = "specBumpMB.fx";			// okay, maybe faster													- requires: color , normal+_ 		 , _+specular				// but okay with normal+height
+////	effect = "specParallaxMB.fx";		// okay but split in model where uv map not continuous 		- requires: color , normal+height , _+specular
+//	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
+//	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
+//	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
+//	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
+//	power = 5;
+//	albedo = 100;
+//}
 
 // non-shader with alpha
 MATERIAL* mtl_unit_nsa =
@@ -243,34 +254,80 @@ MATERIAL* mtl_unit_ns =
 	albedo = 100;
 }
 
-MATERIAL* mtl_unit1_n =
-{
-	effect = "bump.fx";
-	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
-	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
-	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
-	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
-	power = 5;
-	albedo = 100;
-}
+//MATERIAL* mtl_unit1_n =
+//{
+//	effect = "bump.fx";
+//	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
+//	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
+//	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
+//	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
+//	power = 5;
+//	albedo = 100;
+//}
+
+//----------------------
+// rts unit really used
+
 
 MATERIAL* mtl_bonesanim =
 {
 	effect= "obj_bones_MB.fx";
 	ambient_blue  = 50;  	ambient_green  = 50;  	ambient_red  = 50;
-	diffuse_blue  = 225;  	diffuse_green  = 225;  	diffuse_red  = 225;
+	diffuse_blue  = 128;  	diffuse_green  = 128;  	diffuse_red  = 128;
 	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
 	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
 	power = 5;
 	albedo = 100;
 }
 
-//MATERIAL* mtl_wireframe_mb =
-//{
-//	ambient_red = 255; 		ambient_green = 20; 		ambient_blue = 20;
-//	
-//	effect = "technique wireframe { pass one { Fillmode = Wireframe; } }";
-//}
+MATERIAL* mtl_spriteanim =
+{
+	effect= "sc_obj_spriteas_MB.fx";
+	ambient_blue  = 75;  	ambient_green  = 75;  	ambient_red  = 75;
+	diffuse_blue  = 250;  	diffuse_green  = 250;  	diffuse_red  = 250;
+	specular_blue = 0;  		specular_green = 0;  	specular_red = 0;
+	emissive_blue = 0;  		emissive_green = 0;  	emissive_red = 0;
+	power = 5;
+	albedo = 100;
+	
+	flags = ENABLE_RENDER | OVERRIDE;												// needed to cast proper shadows - use a different depth material
+	event = sc_spriteanimstrip_event;												// needed to cast proper shadows - use a different depth material
+}
+
+
+MATERIAL* mtl_spriteanim_depth =
+{
+	effect= "sc_esmDepth_2_MB.fx";
+}
+
+
+//////////////////////////////////////////////////////////////
+// events
+
+
+// intstead of event, it can be set in main loop of MapBuilder
+function sc_tree_billboard_event()
+{
+	// feed vecSkill1 used in vs shader lod						
+	mtl.skill1 = floatv( sinv(camera->pan) );
+	mtl.skill2 = floatv( cosv(camera->pan) );
+}
+
+
+function	sc_spriteanimstrip_event()
+{
+	// use depth material for esm depth view
+	if(render_view == shadowDepthView)
+		{ 
+			mtl = mtl_spriteanim_depth;
+			return 0;
+		}
+	
+	// use original entity material for other (camera, mirror etc.) views
+	mtl = mtl_spriteanim;
+	
+	return 0;
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -278,6 +335,7 @@ MATERIAL* mtl_bonesanim =
 
 
 void		Materials_ShadersInit();
+	void		Materials_ShadersLoop();
 void		Materials_ShadersRemove();
 
 void		Materials_Load_Materials_mat(char* file_name);

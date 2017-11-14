@@ -87,7 +87,7 @@ void Scwater_Init(ENTITY* ent)
 				}
 			else
 				{
-					effect_load(sc_mtl_water, "sc_obj_waternorefr_MB.fx");	// no refraction
+					effect_load(sc_mtl_water, "sc_obj_waternr_MB.fx");			// no refraction
 				}
 		}
 	else

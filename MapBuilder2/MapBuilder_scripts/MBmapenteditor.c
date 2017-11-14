@@ -1189,7 +1189,7 @@ void		MapEnt_CloneObject()
 	my.smask 		= you.smask;
 //	my.client_id 	= you.client_id;
 	
-	memcpy( my.skill, you.skill, 100 * sizeof(var) );
+	memcpy( my->skill, you->skill, 100 * sizeof(var) );
 	
 	my.pose 			= you.pose;
 	my.material 	= you.material;

@@ -7,7 +7,7 @@
 
 //#include <acknex.h> // standard engine objects
 
-var def_dfps,def_dtps,def_dtlv,def_dtcs,def_dtac,def_dtrf,def_dsnd,	def_dent;
+var def_dfps, def_dtps, def_dtlv, def_dtcs, def_dtac, def_dtrf, def_dsnd, def_dent;
 ANGLE def_cang;
 var uu1,uu2; // user debug variables
 
@@ -70,8 +70,8 @@ PANEL* def_debug_pan =
 	digits(205,45,"shd%8.0f",*,1,d3d_texsmaps);
 	digits(205,55,"ent%8.0f",*,1,d3d_texskins);
 	digits(205,65,"fre%8.0f",*,1,d3d_texfree);
-	//digits(205,85,"uu1%6.0f",*,1,uu1);
-	//digits(205,95,"uu2%6.0f",*,1,uu2);
+//	digits(205,75,"uu1%6.0f",*,1,uu1);					// user variable 1 - for testing anything
+//	digits(205,85,"uu2%6.0f",*,1,uu2);					// user variable 2 - for testing anything
 
 //	digits(280,5,"network",*,0,0);
 //	digits(280,15,"lat%4.0f",*,1,dplay_latency);

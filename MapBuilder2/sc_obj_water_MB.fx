@@ -37,7 +37,7 @@ float3 vecSunDir;
 float4 vecFog;				
 float4 vecFogColor;	
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -388,7 +388,7 @@ void water_VS(
 	
 	//----------------------------------------------------------------
 	
-	outLight = (vecAmbient * vecLight) + (vecEmissive * vecColor);						// ambient + emissive
+	outLight = (vecAmbient + vecEmissive) + vecColor;										// ambient + emissive + rgb
 	
 	//----------------------------------------------------------------
 {}   
@@ -398,7 +398,7 @@ void water_VS(
 	for (int i=1; i<iLights; i++)  																// Add max 8 dynamic lights
 		outLight += PointLightDiffuse(PosWorld, WorldNormal, i-1);						// dynamic lights
 		
-	outLight += 2.0 * PointLightDiffuse(PosWorld, WorldNormal, iLights-1);			// Sun
+	outLight += 1.0 * PointLightDiffuse(PosWorld, WorldNormal, iLights-1);			// Sun
 		
 	outLight *= 2.0 * vecDiffuse;		
 #endif
@@ -531,7 +531,7 @@ float4 water_PS(
 	for (int i=1; i<iLights; i++)
 		Lights += PointLightDiffuse(inWorldPos, inWorldNormal, i-1);
 	
-	Lights += 2.0 * PointLightDiffuse(inWorldPos, inWorldNormal, iLights-1);				// Sun
+	Lights += 1.0 * PointLightDiffuse(inWorldPos, inWorldNormal, iLights-1);				// Sun
 	
 	Lights *= 2.0f * vecDiffuse;																
 	

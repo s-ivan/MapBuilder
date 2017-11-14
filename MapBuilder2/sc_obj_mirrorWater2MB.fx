@@ -21,7 +21,7 @@ float3 vecSunDir;
 float4 vecFog;				
 float4 vecFogColor;	
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;

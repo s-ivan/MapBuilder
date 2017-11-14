@@ -111,11 +111,11 @@ TEXT* mainmenu_copytext =
 	blue = 75;
 	
 	font = "Arial#20b"; 
-	string ( "Copyright 2011-2015 Ivan Stummer" , 
+	string ( "Copyright 2011-2017 Ivan Stummer" , 
 				"www.mapbuilder.uw.hu" , 
 				"All rights reserved" , 
 				"" , 
-				"Version 2.50.0" );
+				"Version 2.53.0" );
 	
 	flags = CENTER_X | CENTER_Y | SHADOW;	
 }
@@ -171,6 +171,7 @@ void	main();
 // MapBuilder2 project includes
 
 #define PRAGMA_PATH "MapBuilder_scripts"
+#define PRAGMA_PATH "RTS_scripts"				// RTS game scripts excluded from free editor
 
 #include "MapBuilder2.h"		
 #include "MapBuilder2.c"		
@@ -189,11 +190,10 @@ sys_marker("in0");
 //	compatibility = 13;						// nexus and memory in kB instead of MB - makes free texture memory wrongly as a totally invalid minus value ! engine bug
 	
 	// fade in---------------------
-{}
-#ifndef ENGINE_BUG_FADEIN_A840	
+		
 	if ((sys_winversion >= 6) && (video_screen==2))
 		video_alpha = 0;
-#endif	
+		
 	// show all errors-------------
 //	warn_level = 0;
 	
@@ -209,9 +209,9 @@ sys_marker("in0");
 	// free up memory on exit-------
 	on_exit 		= Exit_Event;				// error message cancel button - it is run one frame before shut down
 	on_close 	= Main_Exit;				// close icon of title bar in windowed mode
-//	on_resize 	= ScreenSize_Event;
-//	on_maximize = ScreenSize_Event;
-//	on_minimize = ScreenSize_Event;
+//	on_resize 	= ScreenSize_Event;		// only if resizable window !
+//	on_maximize = ScreenSize_Event;		// only if resizable window !
+//	on_minimize = ScreenSize_Event;		// not needed at all
 	
 	// avoid 3dgs calls-------------
 	on_enter	= Key_Do_Nothing;			// disable resize
@@ -244,8 +244,9 @@ sys_marker("in0");
 //	video_set(sys_metrics(0), sys_metrics(1), 0, 1);
 //	video_set(1024, 768, 0, 1);
 	// window settings
-	video_window(NULL,NULL,16+32+64,"MapBuilder2");		// border+title (default), +close, +minimize
-//	video_window(NULL,NULL,1,NULL);							// no border - okay for ATI card usage in windowed mode too
+//	video_window(NULL,NULL,4+16+32+64+128,"MapBuilder2");		// resizable-border +title +close, +minimize(, +maximize) - stops with DX texture errors!
+	video_window(NULL,NULL,2+16+32+64,"MapBuilder2");			// fix-border +title (default), +close, +minimize
+//	video_window(NULL,NULL,1,NULL);									// no border - okay for ATI card usage in windowed mode too
 	
 //	wait(1);
 	
@@ -363,35 +364,31 @@ sys_marker("in0");
 	
 	//--------------------------------------
 	// fade in screen
-#ifndef ENGINE_BUG_FADEIN_A840	
+		
 	if ((sys_winversion >= 6) && (video_screen==2))
      for (video_alpha = 0; video_alpha < 100; video_alpha += 15*time_step)
        wait(1);	
 	
-	video_alpha = 100;
-#endif	
+	video_alpha = 100;	
 
-sys_marker(NULL);	
 	//--------------------------------------
-	// level independent editor loop - mouse pointer update, screenshot making, 3dgs debug info panel, and custom debugging texts
+	// level independent editor loop - mouse pointer update, screenshot making, 3dgs debug info panel, and custom debugging texts	
+sys_marker("in1");
 	
-sys_marker("in1");	
 	var show_debug = 0;
 	
 //	fps_max = 0; // no limit test
 	
 	while(1)	
-		{			
-			vec_set(mouse_pos, mouse_cursor);		
+		{	
+			//--------------------------------------------------
+			// mouse pos update
 			
-//			// test
-//			if (key_l)
-//				{
-//					while (key_l) {wait (1);}
-//					bmap_to_normals(bmap_for_entity(water_entity, 1), 5);	
-//				}
+			vec_set(mouse_pos, mouse_cursor);
 			
-			// make screenshot any time-------------------------------
+			//--------------------------------------------------
+			// make screenshot any time
+			
 			if ((key_f) && (key_alt) && (!key_ctrl) && (!key_shift))
 				{
 					while (key_f) {wait (1);}
@@ -400,7 +397,10 @@ sys_marker("in1");
 					ui_screencounter++;
 					str_cpy(save_dir,"");										// can cause problems if not reset...
 				}
-			// debug panel--------------------------------------------
+			
+			//--------------------------------------------------
+			// debug panel
+			
 			if (key_f11) 			
 				{
 					while (key_f11) {wait (1);}	
@@ -428,6 +428,9 @@ sys_marker("in1");
 					def_dtrf = time_update+time_idle;						// ref		4-5		screen refresh + idling to fps_max
 					def_dtac = time_actions+time_pfuncs;					// fnc		8-13
 					
+//					uu1 = time_client;											// uu1		0
+//					uu2 = time_server;											// uu2		1-2		entity update
+					
 					def_dsnd = num_mediastreams + num_sounds;
 					
 					def_cang.pan = cycle(camera->pan,0,360); 
@@ -441,6 +444,9 @@ sys_marker("in1");
 					//if(pX_stats)
 					//	num_bodies = pX_stats(1);
 				}
+			
+			//--------------------------------------------------
+			// other debug data for testing
 			
 //			if (level_ent)
 //				{
@@ -479,10 +485,12 @@ sys_marker("in1");
 //					draw_text(str_for_entfile(NULL, water_entity), 300, 325, COLOR_WHITE);
 //					draw_text(str_for_entname(NULL, water_entity), 500, 325, COLOR_WHITE);
 //				}
+			//--------------------------------------------------
 			
 			wait(1);
+			
+			//--------------------------------------------------
 		}	
-sys_marker(NULL);	
 }
 
 
@@ -535,8 +543,6 @@ sys_marker("mpi");
 	pan_setbutton(mainmenu_panel, 0,	1, 	24,212,		exit_on_bmp, exit_off_bmp, exit_over_bmp, exit_over_bmp,																		MainMenu_Exit,	 		NULL, NULL); 	
 	
 	//----------------------------------------------------
-		
-sys_marker(NULL);	
 }
 
 
@@ -569,8 +575,6 @@ sys_marker("mmc");
 	
 	reset(mainmenu_titletext , SHOW);
 	reset(mainmenu_copytext , SHOW);
-		
-sys_marker(NULL);	
 }
 
 
@@ -914,8 +918,7 @@ sys_marker("ms0");
 	pan_setbutton(mainmenu_settings_panel, 0,	1, 	120,340,		ss_arrow_left_on_bmp, ss_arrow_left_off_bmp, ss_arrow_left_on_bmp, ss_arrow_left_off_bmp,				Main_Settings_Button, 	NULL, NULL); 
 	pan_setbutton(mainmenu_settings_panel, 0,	1, 	165,340,		ss_arrow_right_on_bmp, ss_arrow_right_off_bmp, ss_arrow_right_on_bmp, ss_arrow_right_off_bmp,		Main_Settings_Button, 	NULL, NULL); 																							
 	
-	
-sys_marker(NULL);	
+	//------------------------------------
 }
 
 

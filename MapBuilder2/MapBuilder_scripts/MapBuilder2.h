@@ -6,10 +6,10 @@
 // defines
 
 
-#define MB_RELEASE							// always must be designed - no RTS related scripts
+#define MB_RELEASE							// always must be defined - no RTS related scripts (source is removed from published editor)
 
 //#define MB_GAME								// never define it here - must be defined in your game
-													// to access in-game functions only, excluding editor functions
+													// to access in-game functions only, excluding unused editor functions requiring editor only data
 
 //--------------------------------------------
 // some engine bugs under fixing, comment them out when said to be fixed
@@ -17,8 +17,6 @@
 //#define ENGINE_BUG_PSSM_A840			// blur needed to avoid rendering errors - fixed in A8.44
 
 #define ENGINE_BUG_DECAL_A840				// NOSHADOW can't be used in mirror views - said to be, but not really fixed in A8.45
-
-//#define ENGINE_BUG_FADEIN_A840			// win7 ATI card without aero theme after fade-in window remains semi-transparent - fixed in A8.45
 
 //--------------------------------------------
 // editor (0..499), game (500..998), and map initialization related modes (999...):
@@ -138,10 +136,12 @@ var		main_minresy			= 600;	// max panel height is 512
 	
 #ifndef MB_GAME
 	void	Main_Restart();	
-#endif	
+#endif
+	
 	void	Main_Exit();	
 	void	Exit_Event();
-
+	void	ScreenSize_Event();
+	
 #ifndef MB_GAME	
 	function on_level_event(percent);
 #endif
@@ -163,40 +163,16 @@ var		main_minresy			= 600;	// max panel height is 512
 #include "MBhelpers.h"																// ray tracing, file operations etc.
 
 //--------
-// material and sky system
+// shader cores and parameter editors, available from sky editor (shadowmappings)
 
-#include "MBdecalshadows.h"														// decal-shadows and ent_decal shadows
-
-#include "MBmaterials.h"
+#include "MBscsm.h"
 #ifndef MB_GAME
-	#include "MBmaterialeditor.h"
+	#include "MBscsmeditor.h"
 #endif
 
-#include "MBsky.h"
+#include "MBpssm.h"
 #ifndef MB_GAME
-	#include "MBskyeditor.h"
-#endif
-
-
-//--------
-// map system core
-
-#include "MBmap.h"
-#include "MBmaphelp.h"																// helpers : gets/sets, tile-coordinate conversions
-#include "MBmaphelp2.h"																// helpers : angle-direction conversions, get neighbouring tiles
-
-#ifndef MB_GAME
-	#include "MBsettings.h"															// could be called as MBmapeditor
-#endif
-
-//--------
-// file handling
-
-#include "MBfile.h"
-#ifndef MB_GAME	
-	#include "MBfileeditor.h"
-
-	#include "MBsaveaswmb.h"
+	#include "MBpssmeditor.h"
 #endif
 
 //--------
@@ -217,16 +193,39 @@ var		main_minresy			= 600;	// max panel height is 512
 #endif
 
 //--------
-// shader cores and parameter editors, available from sky editor (shadowmappings)
+// material and sky system
 
-#include "MBscsm.h"
+#include "MBdecalshadows.h"														// decal-shadows and ent_decal shadows
+
+#include "MBmaterials.h"
 #ifndef MB_GAME
-	#include "MBscsmeditor.h"
+	#include "MBmaterialeditor.h"
 #endif
 
-#include "MBpssm.h"
+#include "MBsky.h"
 #ifndef MB_GAME
-	#include "MBpssmeditor.h"
+	#include "MBskyeditor.h"
+#endif
+
+//--------
+// map system core
+
+#include "MBmap.h"
+#include "MBmaphelp.h"																// helpers : gets/sets, tile-coordinate conversions
+#include "MBmaphelp2.h"																// helpers : angle-direction conversions, get neighbouring tiles
+
+#ifndef MB_GAME
+	#include "MBsettings.h"															// could be called as MBmapeditor
+#endif
+
+//--------
+// file handling
+
+#include "MBfile.h"
+#ifndef MB_GAME	
+	#include "MBfileeditor.h"
+
+	#include "MBsaveaswmb.h"
 #endif
 
 //--------
@@ -342,9 +341,10 @@ var		main_minresy			= 600;	// max panel height is 512
 			
 		#include "MBplayertest02_rts.h"										// initialize RTS game test mode
 		
-		#include "MBrtsunitinit_rts.h"
-		#include "MBrtsunitcreate_rts.h"
-		#include "MBrtsunitupdate_rts.h"	
+		#include "MBrtsunitinit_rts.h"										// unit struct initialization
+		#include "MBrtsunitcreate_rts.h"										// unit entity creation
+		#include "MBrtsunitupdate_rts.h"										// unit update and old state machine
+		#include "MBrtsunitupdate2_rts.h"									// new behaviour tree
 		
 		#include "MBrtsgroupinit_rts.h"
 		#include "MBrtsgroupupdate_rts.h"
@@ -372,6 +372,34 @@ var		main_minresy			= 600;	// max panel height is 512
 
 #include "MBarray.c"
 #include "MBhelpers.c"
+
+//--------
+
+#include "MBscsm.c"
+#ifndef MB_GAME
+	#include "MBscsmeditor.c"
+#endif
+
+#include "MBpssm.c"
+#ifndef MB_GAME
+	#include "MBpssmeditor.c"
+#endif
+
+//--------
+
+#include "MBmwater.c"
+#ifndef MB_GAME
+	#include "MBmwatereditor.c"
+#endif
+
+#include "MBscwater.c"
+#ifndef MB_GAME
+	#include "MBscwatereditor.c"
+#endif
+
+#ifndef MB_GAME
+	#include "MBterrautoeditor.c"
+#endif
 
 //--------
 
@@ -404,34 +432,6 @@ var		main_minresy			= 600;	// max panel height is 512
 	#include "MBfileeditor.c"
 
 	#include "MBsaveaswmb.c"
-#endif
-
-//--------
-
-#include "MBmwater.c"
-#ifndef MB_GAME
-	#include "MBmwatereditor.c"
-#endif
-
-#include "MBscwater.c"
-#ifndef MB_GAME
-	#include "MBscwatereditor.c"
-#endif
-
-#ifndef MB_GAME
-	#include "MBterrautoeditor.c"
-#endif
-
-//--------
-
-#include "MBscsm.c"
-#ifndef MB_GAME
-	#include "MBscsmeditor.c"
-#endif
-
-#include "MBpssm.c"
-#ifndef MB_GAME
-	#include "MBpssmeditor.c"
 #endif
 
 //--------
@@ -512,6 +512,7 @@ var		main_minresy			= 600;	// max panel height is 512
 #endif
 
 //--------
+// RTS
 
 #ifndef MB_GAME
 	#ifndef MB_RELEASE
@@ -541,6 +542,7 @@ var		main_minresy			= 600;	// max panel height is 512
 		#include "MBrtsunitinit_rts.c"
 		#include "MBrtsunitcreate_rts.c"
 		#include "MBrtsunitupdate_rts.c"	
+		#include "MBrtsunitupdate2_rts.c"	
 		
 		#include "MBrtsgroupinit_rts.c"
 		#include "MBrtsgroupupdate_rts.c"

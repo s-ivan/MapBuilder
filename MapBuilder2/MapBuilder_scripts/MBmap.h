@@ -31,27 +31,29 @@
 
 
 STRING*	map_mapname 				= "";								// any text
-int		map_maptilesx 				= 0;								// horizontal size in tiles
-int		map_maptilesy 				= 0;								// vertical size in tiles
-int		map_mapzlevels 			= 2;								// 0,1,2
-int		map_tilesize 				= 32;								// 32
-int		map_clustersize 			= 8;								// sub-area size 8..16 - the smaller the faster path search, but the more clusters
-var		map_scalevalue 			= 1;								// mesh scaling, should be 1 for fast rendering, just for experiencing with tile size scaling
-
-int		map_defaultterraintype	= 1;								// TERR_GRASS / TERR_SNOW / TERR_SAND
-int		map_defaultmovecost		= 10;								// COST_NORMAL / COST_BAD / COST_BAD
+STRING*	map_emptyname 				= "maps\\NewMap.trr";
 
 STRING*	map_groundhmpname			= "";								// ground terrain file name - with path
 STRING*	map_waterhmpname			= "";								// water terrain file name - with path
 STRING*	map_levelwmbname			= "";								// wmb level file name - with path
 
-STRING*	map_emptyname 				= "maps\\NewMap.trr";
-																				// terrain texture related ones
+var		map_terrain_chunk			= 32;								// terrain chunk size, important for performance and LOD
+var		map_scalevalue 			= 1;								// mesh scaling, should be 1 for fast rendering, just for experiencing with tile size scaling
+
+// terrain texture related ones
 var		map_detailsize_ground	= 32;								// terrain multitexture or detailmap tiling
 var		map_detailsize_water		= 8;								// water multitexture or detailmap tiling
 var		map_blendfactor_ground	= 0.67;							// terrain multitexture or detailmap blending with base colormap texture - the higher the stronger visibility of tiled textures or detailmap
 
-var		map_terrain_chunk			= 32;
+// RTS game related data
+int		map_maptilesx 				= 0;								// horizontal size in tiles
+int		map_maptilesy 				= 0;								// vertical size in tiles
+int		map_mapzlevels 			= 2;								// 0,1,2
+var		map_tilesize 				= 32;								// 32
+int		map_clustersize 			= 8;								// sub-area size 8..16 - the smaller the faster path search, but the more clusters
+int		map_defaultterraintype	= 1;								// TERR_GRASS / TERR_SNOW / TERR_SAND
+int		map_defaultmovecost		= 10;								// COST_NORMAL / COST_BAD / COST_BAD
+
 
 //--------------------------------------------------------------------
 // map loading flags

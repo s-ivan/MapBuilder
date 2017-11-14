@@ -35,18 +35,25 @@ sys_marker("tfd");
 	var f_count,t_cnt, wilds, i,ii,sub;					
 	//--------------------------------------------------------------------------------------
 	//Extract / separate wildcards
+	
 	str_cpy(tmp_str, wildcards);		
 	wilds = 0;
+	
 	while(str_stri(tmp_str,"|"))	
 		{
 			str_clip(tmp_str,str_stri(tmp_str,"|"));	
 			wilds++;	
 		}
-	STRING* *all_wilds = (STRING**)sys_malloc(sizeof(STRING*) * (++wilds));				// was wilds++
-	memset(all_wilds, 0, sizeof(STRING*) * wilds);			str_cpy(tmp_str, wildcards);	
+	
+	STRING* *all_wilds = (STRING**)sys_malloc(sizeof(STRING*) * (++wilds));							// was wilds++
+	memset(all_wilds, 0, sizeof(STRING*) * wilds);			
+	
+	str_cpy(tmp_str, wildcards);	
+	
 	for(i=0;	i<wilds;	i++)
 		{	
 			all_wilds[i] = str_create(tmp_str);	
+			
 			if(str_stri(tmp_str,"|"))	
 				{	
 					str_clip(tmp_str,str_stri(tmp_str,"|"));

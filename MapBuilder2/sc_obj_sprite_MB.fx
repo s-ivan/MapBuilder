@@ -23,7 +23,7 @@ float4 vecSunColor;
 float4 vecSunDir;
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -50,7 +50,7 @@ float4 vecTime;
 // vertex shaders
 
 #include "sc_vs_sprite_MB.fx"				// vertex shader
-#include "sc_vs_model_MB.fx"				// vertex shader
+//#include "sc_vs_model_MB.fx"			// vertex shader
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // pixel shader

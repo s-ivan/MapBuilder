@@ -33,9 +33,9 @@ function sc_mtl_shadowDepthSunEvent()
 
 MATERIAL* sc_mtl_shadowBlur =
 {
-//	effect = "sc_esmDepthBlurN_MB.fx";						// no blur
-	effect = "sc_esmDepthBlurB_MB.fx";						// box blur
-//	effect = "sc_esmDepthBlurP_MB.fx";						// Poisson blur
+//	effect = "sc_esmDepthBlurN_MB.fx";						// no blur			ugla
+	effect = "sc_esmDepthBlurB_MB.fx";						// box blur			usable
+//	effect = "sc_esmDepthBlurP_MB.fx";						// Poisson blur	fine
 }
 
 MATERIAL* sc_mtl_shadowDepthSun =
@@ -60,7 +60,7 @@ var scsm_run					= 0;			// ok - run loop
 // basic data
 var scsm_resolution 			= 2048;		// 1024 ok - keep it low for good performance															// requires restart
 var scsm_areasize	 			= 3000;		// ok - in quants																									// requires restart
-var scsm_maxdepth 			= 300;		// ok - was = matEffect2[0].w = sc_orthoLightPos[3] , used	in depth and object shaders	// real-time
+var scsm_maxdepth 			= 100;		// ok - was = matEffect2[0].w = sc_orthoLightPos[3] , used	in depth and object shaders	// real-time
 var scsm_sundistance 		= 3750;		// ok - to get proper sun position																			// calculated
 var scsm_lod					= 0;			// -1 NOLOD set, 0-3 NOLOD not set, lod offset applied
 

@@ -47,7 +47,7 @@ STRING*	GetMapName();
 int		GetMapTilesX();
 int		GetMapTilesY();
 int		GetMapZLevels();
-int		GetMapTileSize();									
+function	GetMapTileSize();									
 int		GetMapClusterSize();									// ***
 function	GetMapScaleValue();
 int		GetMapDefaultTerrainType();
@@ -77,7 +77,7 @@ void		SetMapName(STRING* name);
 void		SetMapTilesX(int xtiles);
 void		SetMapTilesY(int ytiles);
 void		SetMapZLevels(int levels);
-void		SetMapTileSize(int tilesize);				
+void		SetMapTileSize(var tilesize);				
 void		SetMapClusterSize(int clustersize);				// ***
 void		SetMapScaleValue(var scalevalue);
 void		SetMapDefaultTerrainType(int tiletype);

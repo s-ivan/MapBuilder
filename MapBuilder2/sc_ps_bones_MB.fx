@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // skins/textures
 
-texture entSkin1; 							// Colormap
+texture entSkin1; 									// Colormap
 
 // Color map sampler
 sampler colorSampler = sampler_state 
@@ -24,20 +24,36 @@ struct inBonesPS
 	float  SkyLight		: TEXCOORD3;
 #endif
 #ifdef PER_PIXEL_LIGHTS   
-   float3 ViewDir			: TEXCOORD1;			//-
+   float3 ViewDir			: TEXCOORD1;
    float3 WorldNormal	: TEXCOORD2;
-	float3 WorldPos		: TEXCOORD4;			// needed only for ps per pixel dynamic lights
+	float3 WorldPos		: TEXCOORD4;
 #endif
-	float4 Shadow			: TEXCOORD7;			//-
+	float4 Shadow			: TEXCOORD7;
 	float  Fog 				: FOG;
 };
 
-struct inBonesPSX
+struct inBonesPS2
 {
 	float4 Color			: COLOR0; 
-   float2 Tex				: TEXCOORD0;
-   float  Fog 				: FOG;
+   float2 Tex				: TEXCOORD0; 
+#ifdef SKY_LIGHT
+	float  SkyLight		: TEXCOORD3;
+#endif
+#ifdef PER_PIXEL_LIGHTS_LOD   
+   float3 ViewDir			: TEXCOORD1;
+   float3 WorldNormal	: TEXCOORD2;
+	float3 WorldPos		: TEXCOORD4;
+#endif
+	float4 Shadow			: TEXCOORD7;
+	float  Fog 				: FOG;
 };
+
+//struct inBonesPSX
+//{
+//	float4 Color			: COLOR0; 
+//	float2 Tex				: TEXCOORD0;
+//	float  Fog 				: FOG;
+//};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // pixel shader
@@ -47,7 +63,7 @@ float4 BonesPS1(inBonesPS In): COLOR
 	//----------------------------------------------------------
 	// shadowmapping
    
-   float shadow1 = PS_shadowmapping_Fast(In.Shadow, scsm_esm_obj_var);
+   float Shadow = PS_shadowmapping_Fast(In.Shadow, scsm_esm_obj_var);
    
 	//----------------------------------------------------------
 	// texture - keep its alpha afterwards
@@ -61,10 +77,10 @@ float4 BonesPS1(inBonesPS In): COLOR
 	// per pixel dynamic lights
 	float4 Lights = 0;
 	
-	for (int i=1; i<=iLights; i++)
+	for (int i=1; i<=iLights; i++)																		// add dynamic lights, and Sun (always the last one)
 		Lights += PointLightDiffuse(In.WorldPos, In.WorldNormal, i-1);
 		
-	Lights *= 2.0f * vecDiffuse;																
+	Lights *= 1.0f * vecDiffuse;																
 	
 	//----------------------------------------------------------
 	// add lighting to color
@@ -77,7 +93,7 @@ float4 BonesPS1(inBonesPS In): COLOR
 	//----------------------------------------------------------
 	// add shadows
 	
-	Color.rgb *= shadow1;																					// dynamic shadows
+	Color.rgb *= Shadow;																						// dynamic shadows
 	
 	//----------------------------------------------------------
 	// add fog
@@ -98,7 +114,7 @@ float4 BonesPS2(inBonesPS In): COLOR
 	//----------------------------------------------------------
 	// shadowmapping
    
-//	float shadow1 = PS_shadowmapping_Fast(In.Shadow, scsm_esm_obj_var);
+//	float Shadow = PS_shadowmapping_Fast(In.Shadow, scsm_esm_obj_var);
    
 	//----------------------------------------------------------
 	// texture - keep its alpha afterwards
@@ -108,14 +124,13 @@ float4 BonesPS2(inBonesPS In): COLOR
    //----------------------------------------------------------
    // dynamic lights
 {}
-#ifdef PER_PIXEL_LIGHTS	
-	// per pixel dynamic lights
+#ifdef PER_PIXEL_LIGHTS_LOD
 	float4 Lights = 0;
 	
-	for (int i=1; i<=iLights; i++)
+	for (int i=1; i<=iLights; i++)																		// add dynamic lights, and Sun (always the last one)
 		Lights += PointLightDiffuse(In.WorldPos, In.WorldNormal, i-1);
 		
-	Lights *= 2.0f * vecDiffuse;																
+	Lights *= 1.0f * vecDiffuse;																
 	
 	//----------------------------------------------------------
 	// add lighting to color
@@ -128,7 +143,7 @@ float4 BonesPS2(inBonesPS In): COLOR
 	//----------------------------------------------------------
 	// add shadows
 	
-//	Color.rgb *= shadow1;																					// dynamic shadows, add if loop runs
+//	Color.rgb *= Shadow;																						// dynamic shadows, add if loop runs
 	
 	//----------------------------------------------------------
 	// add fog
@@ -148,19 +163,19 @@ float4 BonesPS2(inBonesPS In): COLOR
 }
 
 
-float4 BonesPSX(inBonesPSX In): COLOR
-{
-	//----------------------------------------------------------
-	// color
-	
-	float4 Color = In.Color;
-	
-	//----------------------------------------------------------
-	// add fog
-	
-	Color.rgb = lerp(Color.rgb, vecFogColor, In.Fog);												// sm 3.0 fog support	
-	
-	//----------------------------------------------------------
-	
-	return Color;
-}
+//float4 BonesPSX(inBonesPSX In): COLOR
+//{
+//	//----------------------------------------------------------
+//	// color
+//	
+//	float4 Color = In.Color;
+//	
+//	//----------------------------------------------------------
+//	// add fog
+//	
+//	Color.rgb = lerp(Color.rgb, vecFogColor, In.Fog);												// sm 3.0 fog support	
+//	
+//	//----------------------------------------------------------
+//	
+//	return Color;
+//}

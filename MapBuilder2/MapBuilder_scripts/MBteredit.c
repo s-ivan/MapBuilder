@@ -769,8 +769,6 @@ void		TerEdit_Mode_Toggle(button_number)
 
 void		TerEdit_OnClick()
 {
-//	SOUND* temp_snd = snd_create("ding.wav");
-	
 	if (teredit_he_panel)
 		{
 			if (proc_status(TerEdit_He_RaiseLowerArea) > 0) return;
@@ -818,8 +816,7 @@ void		TerEdit_OnClick()
 					if (teredit_tx_count>2)
 						{
 							TerEdit_Tx_Draw32Area(1);		
-							wait_for(TerEdit_Tx_Draw32Area);
-//							snd_play(temp_snd, 100, 0);										
+							wait_for(TerEdit_Tx_Draw32Area);										
 						}
 					else
 						{
@@ -835,7 +832,6 @@ void		TerEdit_OnClick()
 						{
 							TerEdit_Tx_Draw32Area(0);	
 							wait_for(TerEdit_Tx_Draw32Area);
-//							snd_play(temp_snd, 100, 0);	
 						}
 					else
 						{

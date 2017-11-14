@@ -18,9 +18,9 @@ function DirectionToAngle(int direction)
 
 int AngleToDirection(var angle)
 {	
-	var angle	= ang(angle);															// shifts to -180...+180° range
-	angle			+= 360 + 45/2;															// be more than 360°, create +/-45°/2 range
-	angle			%= 360;																	// 0..360
+	angle	= ang(angle);																	// shifts to -180...+180° range
+	angle	+= 360 + 45/2;																	// be more than 360°, create +/-45°/2 range
+	angle	%= 360;																			// 0..360
 	
 	return integer(angle / 45);														// 0..7
 }

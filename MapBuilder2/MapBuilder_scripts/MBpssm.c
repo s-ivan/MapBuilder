@@ -75,7 +75,7 @@ void		Pssm_Start(var numsplits)
 			viewSplit[i]->flags |= viewShadow->flags|ISOMETRIC|SHADOW; 																				// *** NOSHADOW for depth map (got from viewShadow->flags) + SHADOW: render only shadow entities
 			if (pssm_lod>=(var)0)
 				{
-					viewSplit[i]->lod = pssm_lod;																											// was shadow_lod;
+					viewSplit[i]->lod = pssm_lod;																												// was shadow_lod;
 				}
 			viewSplit[i]->bg = pixel_for_vec(COLOR_DARK,0,8888);																						// *** okay
 			viewSplit[i]->bmap = bmap_createblack(pssm_res,pssm_res,14);	

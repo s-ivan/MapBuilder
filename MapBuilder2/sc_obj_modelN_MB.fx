@@ -28,7 +28,7 @@ float4 vecSunColor;
 float4 vecSunPos;
 float3 vecSunDir;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -77,6 +77,10 @@ sampler NormalSampler = sampler_state
 
 #ifdef HEIGHT_FOG
 	#include "sc_heightfog_MB.fx"			// blend distance fog with height fog
+#endif
+
+#ifdef DEBUG_TILE
+	#include "rts_tiledarea_MB.fx"
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +198,7 @@ outModelNVS ModelNVS
 	// lighting
 	
 	// final color
-	Out.Color = (vecAmbient * vecLight) + (vecEmissive * vecColor);			// ambient + emissive
+	Out.Color = (vecAmbient + vecEmissive) + vecColor;								// ambient + emissive + rgb
 		
 {}
 #ifndef PER_PIXEL_LIGHTS
@@ -251,7 +255,7 @@ float4 ModelNPS(inModelNPS In): COLOR
    float LightIntensity = saturate(dot(NormalMap, -vecSunDir));
    
    // diffuse   									
-	float4 Diffuse = scsm_brightness * 5.0 * vecDiffuse * LightIntensity * vecSunColor * vecLight;									
+	float4 Diffuse = scsm_brightness * 1.0 * vecDiffuse * LightIntensity * vecSunColor;									
 	
 	// specular
 	float4 Specular = 0;
@@ -259,7 +263,7 @@ float4 ModelNPS(inModelNPS In): COLOR
 		{
 			float3 Halfway  = saturate(dot(normalize(In.ViewDir - vecSunDir), NormalMap));
 			
-			Specular = vecSpecular * pow( dot(NormalMap, Halfway), fPower) * vecSunColor * vecLight;
+			Specular = vecSpecular * pow( dot(NormalMap, Halfway), fPower) * vecSunColor;
 {}			
 #ifdef SPECULAR_MAP			
 			// specular mapping
@@ -268,7 +272,7 @@ float4 ModelNPS(inModelNPS In): COLOR
 		}
 	// specular - another calculation
 //	float3 Reflect = normalize(2 * LightIntensity * In.WorldNormal - vecSunDir);													// R
-//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor * vecLight;			// R.V^n 												
+//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor;			// R.V^n 												
 		
 	//----------------------------------------------------------
 	// texture - keep its alpha afterwards

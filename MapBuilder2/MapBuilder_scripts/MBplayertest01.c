@@ -390,7 +390,7 @@ action PlayarTest01_Wizard_Walk()
 					(water_hit > -GetMapTileSize()) 
 					&& 
 					(
-						(polygon_hit > (var)GetMapTileSize() * 0.71)							// polygone detection HIT_TARGET and it is far enough
+						(polygon_hit > GetMapTileSize() * 0.71)								// polygone detection HIT_TARGET and it is far enough
 						||
 						(polygon_hit <= (var)0)														// no polygon detection HIT_TARGET
 					)

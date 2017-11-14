@@ -1225,8 +1225,9 @@ void		Sky_Load_Sky_sky(char* file_name)
 						{
 							Scsm_Close();
 							wait_for(Scsm_Close);
+							wait(3);
 							
-		//					printf("scsm stopped");
+//							printf("scsm stopped");
 							
 							scsm_maxdepth			= temp_scsm_maxdepth;
 									
@@ -1250,7 +1251,7 @@ void		Sky_Load_Sky_sky(char* file_name)
 							
 							wait(1);
 							
-		//					printf("scsm values set");
+//							printf("scsm values set");
 							
 							Scsm_Start();																// auto calculates depth that suits new resolution, but can be modified afterwards
 							
@@ -1258,11 +1259,11 @@ void		Sky_Load_Sky_sky(char* file_name)
 							
 							scsm_maxdepth 			= temp_scsm_maxdepth;						// needs to be set again after starting shadowmapping
 							
-		//					printf("scsm okay");
+//							printf("scsm okay");
 						}
 					else
 						{
-		//					printf("scsm error");
+//							printf("scsm error");
 						}
 					
 					// also set pssm parameters, for keeping data enabling correct saving/loading in different shadow modes

@@ -22,7 +22,7 @@ float4 vecSunColor;
 float4 vecSunDir;
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -180,7 +180,7 @@ outLevelVS LevelVS
 	//----------------------------------------------------------------
 	// lighting
 	
-	Out.Color = (vecAmbient * vecLight) + (vecEmissive * vecColor);			// ambient + emissive
+	Out.Color = vecAmbient + vecEmissive + vecColor;								// ambient + emissive + rgb
 		
 {}
 #ifndef PER_PIXEL_LIGHTS
@@ -223,18 +223,18 @@ float4 LevelPS(inLevelPS In): COLOR
    float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir));
       
    // diffuse   
-   float4 Diffuse = scsm_brightness * 2.25 * vecDiffuse * LightIntensity * vecSunColor * vecLight;			// 4 instead of 8 to match model, but not okay alone, there are problems with ambient/emissive engine behaviour!!!										
+   float4 Diffuse = scsm_brightness * 1.0 * vecDiffuse * LightIntensity * vecSunColor;			// 4 instead of 8 to match model, but not okay alone, there are problems with ambient/emissive engine behaviour!!!										
 	
 	// specular										
 	float4 Specular = 0;
 	if (LightIntensity > 0.25f)
 		{
 			float3 Halfway  = saturate(dot(normalize(In.ViewDir - vecSunDir), In.WorldNormal));			
-			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor * vecLight;					
+			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor;					
 		}
 	// specular - another calculation
 //	float3 Reflect = normalize(2 * LightIntensity * In.WorldNormal - In.SunDir);													// R
-//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor * vecLight;			// R.V^n 
+//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor;			// R.V^n 
 	
 	//----------------------------------------------------------
 	// texture - keep its alpha afterwards

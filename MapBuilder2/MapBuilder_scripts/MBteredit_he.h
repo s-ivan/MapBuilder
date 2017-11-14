@@ -2,9 +2,15 @@
 #ifndef MBteredit_he_h
 #define MBteredit_he_h
 
+////////////////////////////////////////////////////////
+// defines
+
+#define MBTEREDIT_USENEWDLL
 
 ////////////////////////////////////////////////////////
 // dll access
+
+#ifndef MBTEREDIT_USENEWDLL
 
 //#define PRAGMA_PLUGIN "terrain_hmp\\terrain_resave.dll"		// should be at exe folder after publishing
 
@@ -17,6 +23,14 @@ STRING* dll_path_from_entity( ENTITY* fl , BOOL b_get_absolute);
 STRING* dll_path_from_file( STRING* fl , BOOL b_get_absolute);
 BOOL dll_path_set_subfolder( STRING* subfolder );
 
+#else
+
+// other dll access save_hmp.dll
+
+int save_hmp(char* filename, ENTITY* terrain, int skip_original_pixels);		// to save modified skins, 1 to save with modified skin, 0 with original
+
+#endif
+
 ////////////////////////////////////////////////////////
 // variables
 
@@ -28,8 +42,8 @@ var		teredit_adj = 50;
 var		teredit_set = 500;
 var		teredit_raiselowerflatten = 0;
 
-int teredit_he_undostep;						// the last undo step stored
-int teredit_he_firstundo;						// the earliest undo step stored (can differ after some undo/redo steps)
+int teredit_he_undostep;											// the last undo step stored
+int teredit_he_firstundo;											// the earliest undo step stored (can differ after some undo/redo steps)
 
 ////////////////////////////////////////////////////
 // panels

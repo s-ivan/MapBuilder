@@ -29,10 +29,6 @@ void		Terrain_StaticFree()
 }
 
 
-/////////////////////////////////////////////////////////////////////
-// tile and cluster - set to real values based on terrain hmp and mdl-s (safe with deleting previous data)
-
-
 void		Terrain_StaticCreate()
 {	
 	//----------------------------------------------------
@@ -85,8 +81,354 @@ void		Terrain_StaticCreate()
 }
 
 
-/////////////////////////////////////////////////////////////////////
-// building tile and cluster update
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void		Terrain_DynamicInit()
+{
+	//---------------------------------
+sys_marker("DI0");
+	int i,j;
+		
+	terrain_map_levels		= GetMapZLevels();											// map levels i.e. building floors present in level
+																										// currently it must be 2 i.e. BUILDING_LEVELS
+																										// later can be limited if no buildings are in the actual level,
+																										// to make faster pathfinding and clearance map updates
+	
+	//---------------------------------
+	// allocate handle arrays for entity categories - not used !
+	
+	terrain_obstacle_handlearray 	= (var*)array_new( sizeof(var), NULL, TileArrayLength );
+	
+	terrain_building_handlearray 	= (var*)array_new( sizeof(var), NULL, TileArrayLength );
+	
+	//---------------------------------
+	// allocate clearance arrays for entity categories
+		
+	terrain_obstacle_clearancearray 	= (char*)array_new( sizeof(char), NULL, TileArrayLength, CL_DEFAULT );
+	
+	terrain_building_clearancearray 	= (char**)array_new( sizeof(char*), NULL, terrain_map_levels );
+	for (j=0; j<terrain_map_levels; ++j)
+		{
+			if (j==0)
+				{
+					terrain_building_clearancearray[j] 	= (char*)array_new( sizeof(char*), NULL, TileArrayLength, CL_DEFAULT );
+				}
+			else
+				{
+					terrain_building_clearancearray[j] 	= (char*)array_new( sizeof(char*), NULL, TileArrayLength, 0 );
+				}
+		}
+	
+	// dynamic - only for debugging !!!
+	terrain_unit_clearancearray 	= (char**)array_new( sizeof(char*), NULL, terrain_map_levels );
+	for( i=0 ; i<terrain_map_levels ; ++i)
+		{
+			terrain_unit_clearancearray[i] 	= (char*)array_new( sizeof(char*), NULL, TileArrayLength, CL_DEFAULT );		
+		}
+sys_marker(NULL);		
+	//---------------------------------
+}
+
+
+void		Terrain_DynamicFree()
+{
+	
+sys_marker("DF0");
+
+	//----------------------------------------	
+	
+	int i,j;
+	
+	proc_kill2(Terrain_AllClearanceMapUpdate, NULL);
+	wait(1);
+	
+	//----------------------------------------	
+	//----------------------------------------
+	// shadow casting entity list
+	
+	if (terrain_shadowentity_array != NULL)
+		{
+			for (i=0;i<terrain_shadowentity_counter;i++)
+				{
+					set(terrain_shadowentity_array[i],SHADOW);
+				}
+			wait(1);
+			
+			for (i=0;i<terrain_shadowentity_counter;i++)
+				{
+					terrain_shadowentity_array[i].emask &= ~DYNAMIC;			
+				}
+			wait(1);
+			
+			for (i=0;i<terrain_shadowentity_counter;i++)
+				{
+					terrain_shadowentity_array[i] = NULL;
+		//			ptr_remove(terrain_shadowentity_array[i]);						// no !!! it would delete them
+				}
+			
+			for (i=0; i<terrain_shadowentity_counter; i++)
+				{
+					array_destroy( terrain_shadowentity_array[i] );
+				}
+			array_destroy(terrain_shadowentity_array);
+			wait(1);
+		}
+	
+	//----------------------------------------	
+	//----------------------------------------
+	// TILE MAPS
+	
+	//----------------------------------------	
+	// shrub handle map
+sys_marker("DFa");	
+//	if (terrain_shrub_handlearray != NULL)
+//		{
+//			sys_free(terrain_shrub_handlearray);		
+//			terrain_shrub_handlearray 		= NULL;
+//			wait(1);
+//		}
+	
+	//----------------------------------------	
+	// obstacle handle map
+	
+sys_marker("DFb");
+	
+	array_destroy(terrain_obstacle_handlearray);	
+	wait(1);
+	
+	//----------------------------------------	
+	// building FLAG2 and ENT_TYPE reset
+
+sys_marker("DF2");	
+
+	// set entities to dynamic to be able to modify flag and skill
+	you = ent_next(NULL); 		
+	while (you) 						
+		{
+			if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
+				{
+					you.emask |= DYNAMIC;															
+				}
+			you = ent_next(you); 	
+		}
+	wait(1);
+	
+	// set again FLAG2 and reset ENT_TYPE to 0
+	you = ent_next(NULL); 		
+	while (you) 					
+		{
+			if ( AbsTileValid((int)you.ABSTILE_POS) )	
+				{
+					// restore for all entities
+					you.AREA_SIZEX = you.ORIG_AREA_SIZEX;
+					you.AREA_SIZEY = you.ORIG_AREA_SIZEY;
+					
+					if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
+						{					
+							if (you.ENT_TYPE == (var)2)
+								{
+									you.ENT_TYPE = 0;
+								}
+							else
+								{
+									set(you, FLAG2);										// keep obstacle building FLAG2 to have proper cluster and tile representation in MBposinfopanel.c
+								}														
+						}
+				}
+			you = ent_next(you); 
+		}	
+	wait(1);
+	
+	// set entities back to static for faster rendering
+	you = ent_next(NULL); 		
+	while (you) 					
+		{
+			if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
+				{					
+					you.emask &= ~DYNAMIC;										
+				}
+			you = ent_next(you); 	
+		}	
+	wait(1);
+	
+	//----------------------------------------	
+	// building handle map
+	
+	array_destroy(terrain_building_handlearray);					
+	wait(1);
+	
+	//----------------------------------------	
+	//----------------------------------------	
+	// shrub clearance map
+
+sys_marker("DF3");	
+
+//	if (terrain_shrub_clearancearray != NULL)
+//		{
+//			sys_free(terrain_shrub_clearancearray);	
+//			terrain_shrub_clearancearray 		= NULL;
+//			wait(1);
+//		}
+	
+	//----------------------------------------	
+	// obstacle clearance map
+	
+	array_destroy(terrain_obstacle_clearancearray);	
+	wait(1);
+	
+	//----------------------------------------
+	//	building clearance map
+	
+	if (terrain_building_clearancearray != NULL)
+		{
+			for (i=0; i<terrain_map_levels; i++)
+				{
+					array_destroy( terrain_building_clearancearray[i] );
+				}
+			array_destroy(terrain_building_clearancearray);
+			wait(1);
+		}
+	
+	//----------------------------------------
+	//----------------------------------------
+	// static clearance map	
+	
+sys_marker("DF4");
+	
+	if (terrain_static_clearancearray != NULL)
+		{
+			for (i=0;i<4;i++)
+				{			
+					for (j=0; j<terrain_map_levels; j++)
+						{
+							array_destroy( (terrain_static_clearancearray[i])[j] );
+						}
+					array_destroy( terrain_static_clearancearray[i] );
+				}
+			array_destroy(terrain_static_clearancearray);
+			wait(1);
+		}
+	
+	//----------------------------------------
+	// summed clearance map	
+	
+	if (terrain_summed_clearancearray != NULL)
+		{
+			for (i=0; i<4; i++)
+				{			
+					for (j=0; j<terrain_map_levels; j++)
+					{
+						array_destroy( (terrain_summed_clearancearray[i])[j] );
+					}
+					array_destroy( terrain_summed_clearancearray[i] );
+				}
+			array_destroy(terrain_summed_clearancearray);
+			wait(1);
+		}
+	
+	//----------------------------------------
+	//----------------------------------------
+	//	unit clearance map
+	
+	if (terrain_unit_clearancearray != NULL)
+		{
+			for (i=0; i<terrain_map_levels; i++)
+				{
+					array_destroy( terrain_unit_clearancearray[i] );
+				}
+			array_destroy(terrain_unit_clearancearray);
+			wait(1);
+		}
+	
+	//----------------------------------------	
+	//----------------------------------------
+	// CLUSTER MAPS
+
+sys_marker("DF5");	
+	
+	//----------------------------------------
+	// group map
+	
+	array_destroy(terrain_group_clusterarray);
+	wait(1);
+	
+	//----------------------------------------
+	
+sys_marker(NULL);
+
+}
+
+
+void		Terrain_DynamicCreate()
+{
+	//----------------------------------------------------		
+	
+	set( map_loadpanel , SHOW);
+	set( map_loadtext1 , SHOW);	
+	wait(3);			
+	
+	//-----------------------------------------
+	
+	int i, j, k;
+	var your_handle;
+	int your_abstile_pos;
+	
+	//-----------------------------------------
+	// allocate data holders
+{}	
+#ifdef DEBUG_PLAY02		
+	str_cpy(terrain_progress_message, "Dynamic Data");
+	wait(3);	
+#endif
+	
+	Terrain_DynamicInit();
+	wait_for(Terrain_DynamicInit);
+	
+	//-----------------------------------------
+	// fill data holders, create corresponding clearance maps - slower than one common loop
+	
+	Terrain_DynamicBuildings();
+	wait_for(Terrain_DynamicBuildings);
+	
+//	Terrain_DynamicShrubs();
+//	wait_for(Terrain_DynamicShrubs);
+	
+	Terrain_DynamicObstacles();
+	wait_for(Terrain_DynamicObstacles);
+	
+	Terrain_DynamicShadowEntities();
+	wait_for(Terrain_DynamicShadowEntities);	
+		
+	//------------------------------------------------
+	// create summed maps from entity maps by merging them
+	
+	Terrain_DynamicStaticMap();
+	wait_for(Terrain_DynamicStaticMap);
+	
+	Terrain_DynamicSummedMap();
+	wait_for(Terrain_DynamicSummedMap);
+	
+	Terrain_DynamicGroupMap();
+	wait_for(Terrain_DynamicGroupMap);
+	
+	//------------------------------------------------------------------------------
+
+#ifdef DEBUG_PLAY02		
+	str_cpy(terrain_progress_message, "");
+	str_cpy(terrcluster_progress_message, "");
+	wait(3);
+#endif
+	
+	reset( map_loadpanel , SHOW);
+	reset( map_loadtext1 , SHOW);			
+	
+	//------------------------------------------------------------------------------
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void		Terrain_SetBuildingTilesClusters(ENTITY* ent, STRING* bld_foldername)
@@ -98,32 +440,40 @@ void		Terrain_SetBuildingTilesClusters(ENTITY* ent, STRING* bld_foldername)
 //		{
 //			return;
 //		}
-		
+	
+	// can be called only after an AbsTileValid((int)ent.ABSTILE_POS) check
 	//-----------------------------------------------------------------
 
-sys_marker("sm0");
+sys_marker("SB0");
+	
+	int 	i,j,k;
 	
 	// get name from model or mapent name
 	STRING* temp_str = str_create( "" );
 	str_cpy(temp_str , bld_foldername);
 	str_cat(temp_str , str_for_entfile(NULL , ent));
 	str_trunc(temp_str,4);
+{}
+#ifdef BUILDING_USECSV
+	str_cat(temp_str,".csv");	
+#else
 	str_cat(temp_str,".bld");		
-	
+#endif	
 	// data from file
-	int	building_floors			= 1;			// 1..2 by default, but should be flexibly extendable for higher floor numbers !!! ***
-	int	building_custers_1		= 0;			// 0..3 - // should be flexible in floor number !!! ***
-	int	building_custers_2		= 0;			// 0..3 - // should be flexible in floor number !!! ***
+	int	building_floors			= 1;					// 1..2 by default, but should be flexibly extendable for higher floor numbers !!! ***
+	int	building_custers_1		= 0;					// 0..3 - // should be flexible in floor number !!! ***
+	int	building_custers_2		= 0;					// 0..3 - // should be flexible in floor number !!! ***
 	
-	// int* building_clusters_per_floor = NULL;
-	char* building_cluster_type	= NULL;		// 1..6 array  , value: TERR_XXXX
-	char* building_tile_cluster	= NULL;		// 1..256 array, value: 1..max cluster
-	char* building_tile_type		= NULL;		// 1..256 array, value: 0 no access, 1 passable, 2 no change -> TERR_XXXX
-	var* 	building_tile_height		= NULL;		// 1..256 array, value could be divided by 10 to get decimals - if type is no change, no height change!!!
-	char* building_tile_clearance	= NULL;		// 1..256 array, value: 0,1,3,5 (but in practice 5=100)
+sys_marker("SB1");
+	char* building_cluster_type			= NULL;		// 1..256 array, value: TERR_XXXX	
+	char* building_tile_cluster			= NULL;		// 1..256 array, value: 1..max cluster
+	char* building_tile_type				= NULL;		// 1..256 array, value: 0 no access, 1 passable, 2 no change -> TERR_XXXX
+	char* building_cluster_bottleneck	= NULL;		// 1..256 array, value 0.1
+	var* 	building_tile_height				= NULL;		// 1..256 array, value could be divided by 10 to get decimals - if type is no change, no height change!!!
+	char* building_tile_clearance			= NULL;		// 1..256 array, value: 0,1,3,5 (but in practice 5=100)
 	
 	// new clusters' ID number
-	short* building_cluster_id		= NULL;		// 1..6 array  , value: 0..ClusterArrayLength or 60000 if uninitialized		
+	short* building_cluster_id		= NULL;				// 1..6 array  , value: 0..ClusterArrayLength or 60000 if uninitialized		
 	
 	// intermediate data
 	int	building_tiles				= (int)(ent.AREA_SIZEX) * (int)(ent.AREA_SIZEY);			// size of one floor, got from obw file
@@ -131,11 +481,13 @@ sys_marker("sm0");
 	
 	int	building_alltiles			= 0;																		// =0, must be calculated or set later (= floors * tiles)
 	
-	int 	i,j,k;
-		
+	// 4 corner tiles of building area
+	// used as a reference for subdividing neighbouring L and U shaped clusters
+	// from BL, BR, TL, TR	
+	int*	building_corner_abstiles = NULL;																	// *** freeing issue ***
+	building_corner_abstiles = (int*)array_new( sizeof(int), NULL, (int)4, (int)0 );			// int needed for abstiles, short is enough only for x-y tiles !!!
+	
 	//-----------------------------------------------------------------------
-
-sys_marker("sm1");
 
 	// read in building file data to temp structure	- tiles are read from bottom left corner, to right and to up, from level 0 to up
 	var file_handle = file_open_read( temp_str );
@@ -143,6 +495,241 @@ sys_marker("sm1");
 	// read file if exists
 	if (file_handle)
 		{
+{}			
+#ifdef BUILDING_USECSV				
+			//---------------------------------------------------
+			//---------------------------------------------------
+			// .csv file
+			
+//			// delimit_str by default "," thus file_str_read() works too
+//			str_cpy(delimit_str, ",");
+			
+			//---------------------------------------------------
+			// x-y tile size 
+			
+			// if last value after a "," is empty, i.e. followed by a new line sign,
+			// it is not read, -> row length is x size - 1 !!!!!!!!!!!!!!!!!!!!!!!!!!
+			//
+			// with file_str_readto() /n is not read as value separator!
+			// thus last and 1st number is rean as e.g. 1/n1 leading to bad results !!!
+			// -> better to use simply file_str_read()
+			// 
+			// tile data is Y mirrored !!! (mirror axis is X)
+			
+			file_str_read(file_handle, temp_str);
+			int building_xtiles = str_to_int( temp_str );												// clusters on 1st floor (line)
+			for (j=0; j<building_xtiles-2; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+//			printf("building_xtiles: %i" , building_xtiles);
+			
+			file_str_read(file_handle, temp_str);
+			int building_ytiles  = str_to_int( temp_str );												// clusters on 2nd floor (line)
+			for (j=0; j<building_xtiles-2; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+//			printf("building_ytiles: %i" , building_ytiles);
+			
+			ent.AREA_SIZEX = (var)building_xtiles;
+			ent.AREA_SIZEY = (var)building_ytiles;
+			
+			building_tiles	= (int)(ent.AREA_SIZEX) * (int)(ent.AREA_SIZEY);
+			
+			//---------------------------------------------------
+			// level0-1 clusters
+			
+			// comment (line)
+			for (j=0; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			file_str_read(file_handle, temp_str);
+			building_custers_1 = str_to_int( temp_str );													// clusters on 1st floor (line)
+			for (j=0; j<building_xtiles-2; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			// comment (line)
+			for (j=0; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			file_str_read(file_handle, temp_str);
+			building_custers_2 = str_to_int( temp_str );													// clusters on 2nd floor (line)
+			for (j=0; j<building_xtiles-2; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			//---------------------------------------------------
+			// conversions
+			
+			building_clusters = building_custers_1 + building_custers_2;							// total number of building clusters
+			
+			building_floors = 0;
+			if (building_custers_1 > 0) 
+				{
+					building_floors++;																			// add one floor if level0 clusters present
+				}
+			if (building_custers_2 > 0) 
+				{
+					building_floors++;																			// add one floor if level1 clusters present (assuming level0 present)
+				}
+			building_alltiles = building_floors * building_tiles;
+			
+			// check
+//			printf("building_clusters: %i" , building_clusters);
+//			printf("building_alltiles: %i" , building_alltiles);
+			
+			//---------------------------------------------------
+			// cluster types for each cluster
+sys_marker("b00");			
+
+			// comment (line)
+			for (j=0; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_cluster_type 	= (char*)array_new( sizeof(char), NULL, building_clusters );		// types of the new clusters 
+			
+			for (i=0; i<building_clusters; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_cluster_type[i] = (char)str_to_int( temp_str );	
+						
+					for (j=0; j<building_xtiles-2; ++j)
+						{
+							file_str_read(file_handle, temp_str);
+						}
+				}
+			
+			//---------------------------------------------------
+			// is bottleneck for each cluster
+sys_marker("b01");
+			
+			// comment (line)
+			for (j=0; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_cluster_bottleneck 	= (char*)array_new( sizeof(char), NULL, building_clusters );		// bottleneck of the new clusters 
+			
+			for (i=0; i<building_clusters; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_cluster_bottleneck[i] = (char)str_to_int( temp_str );	
+						
+					for (j=0; j<building_xtiles-2; ++j)
+						{
+							file_str_read(file_handle, temp_str);
+						}
+				}
+			
+//			for (i=0; i<building_clusters; ++i)
+//				{
+//					printf("bottleneck: %i" , (int)building_cluster_bottleneck[i]);
+////					printf(_chr(str_for_int(NULL, building_cluster_bottleneck[i])));
+//				}
+			
+			//---------------------------------------------------
+			// tile cluster numbers for each tile
+sys_marker("b02");			
+
+			// comment (line)
+			for (j=0 ; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_tile_cluster 	= (char*)array_new( sizeof(char), NULL, building_alltiles );		// correspondance to building clusters
+			
+			for (i=0 ; i<building_alltiles; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_tile_cluster[i] = (char)str_to_int( temp_str );
+					
+					// check
+//					int temp_i = (int)building_tile_cluster[i];
+//					printf("building_tile_cluster: %i" , temp_i);	
+				}
+			
+			//---------------------------------------------------
+			// tile types for each tile
+sys_marker("b03");			
+
+			// comment (line)
+			for (j=0 ; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_tile_type 	= (char*)array_new( sizeof(char), NULL, building_alltiles );			// tile types in each clusters
+			
+			for (i=0; i<building_alltiles; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_tile_type[i] = (char)str_to_int( temp_str );
+					
+					// check
+//					int temp_i = (int)building_tile_type[i];
+//					printf("building_tile_type: %i" , temp_i);
+				}
+			
+			//---------------------------------------------------
+			// tile heights for each tile
+sys_marker("b04");
+
+			// comment (line)
+			for (j=0 ; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_tile_height = (var*)array_new( sizeof(var), NULL, building_alltiles );				// tile heights in each clusters
+			
+			for (i=0; i<building_alltiles; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_tile_height[i] = str_to_num( temp_str );
+					
+//					// check
+//					int temp_i = (int)building_tile_height[i];
+//					printf("building_tile_height: %i" , temp_i);	
+				}	
+			
+			//---------------------------------------------------
+			// tile clearance masks for each tile
+sys_marker("b05");			
+
+			// comment (line)
+			for (j=0 ; j<building_xtiles-1; ++j)
+				{
+					file_str_read(file_handle, temp_str);
+				}
+			
+			building_tile_clearance = (char*)array_new( sizeof(char), NULL, building_alltiles );		// tile defaultclearance values in each clusters
+			
+			for (i=0; i<building_alltiles; ++i)
+				{
+					file_str_read(file_handle, temp_str);
+					building_tile_clearance[i] = (char)str_to_int( temp_str );
+					
+//					// check
+//					int temp_i = (int)building_tile_clearance[i];
+//					printf("building_tile_clearance: %i" , temp_i);	
+				}	
+#else			
+			//---------------------------------------------------
+			//---------------------------------------------------
+			// .bld file
+			
 			//---------------------------------------------------
 			// level0 clusters
 			file_str_read( file_handle , NULL );															// comment line
@@ -166,11 +753,11 @@ sys_marker("sm1");
 			building_floors = 0;
 			if (building_custers_1>0) 
 				{
-					building_floors++;		// one times tiles per level/floor
+					building_floors++;																			// one times tiles per level/floor
 				}
 			if (building_custers_2>0) 
 				{
-					building_floors++;		// one times tiles per level/floor
+					building_floors++;																			// one times tiles per level/floor
 				}
 			building_alltiles = building_floors * building_tiles;
 			
@@ -183,9 +770,9 @@ sys_marker("sm1");
 
 sys_marker("b01");			
 
-			file_str_read( file_handle , NULL );															// comment line
+			file_str_read( file_handle , NULL );																		// comment line
 			
-			building_cluster_type = array_new( sizeof(char), NULL, building_clusters );		// type of the new clusters	
+			building_cluster_type 	= (char*)array_new( sizeof(char), NULL, building_clusters );		// type of the new clusters	
 			
 			for (i=0 ; i<building_clusters ; i++)
 				{
@@ -198,13 +785,18 @@ sys_marker("b01");
 				}
 			
 			//---------------------------------------------------
+			// bottleneck for each cluster
+			
+			building_cluster_bottleneck 	= (char*)array_new( sizeof(char), NULL, building_clusters, 1 );					// 1 - bottleneck
+			
+			//---------------------------------------------------
 			// tile cluster numbers for each tile
 
 sys_marker("b02");			
 
-			file_str_read( file_handle , NULL );															// comment line
+			file_str_read( file_handle , NULL );																		// comment line																
 			
-			building_tile_cluster = array_new( sizeof(char), NULL, building_alltiles );		// correspondance to building clusters
+			building_tile_cluster 	= (char*)array_new( sizeof(char), NULL, building_alltiles );		// correspondance to building clusters
 			
 			for (i=0 ; i<(building_alltiles) ; i++)
 				{
@@ -221,9 +813,9 @@ sys_marker("b02");
 
 sys_marker("b03");			
 
-			file_str_read( file_handle , NULL );															// comment line
+			file_str_read( file_handle , NULL );																		// comment line															
 			
-			building_tile_type = array_new( sizeof(char), NULL, building_alltiles );			// tile types in each clusters
+			building_tile_type 	= (char*)array_new( sizeof(char), NULL, building_alltiles );			// tile types in each clusters
 			
 			for (i=0 ; i<building_alltiles ; i++)
 				{
@@ -240,9 +832,9 @@ sys_marker("b03");
 
 sys_marker("b04");
 
-			file_str_read( file_handle , NULL );															// comment line
+			file_str_read( file_handle , NULL );																		// comment line
 			
-			building_tile_height = array_new( sizeof(var), NULL, building_alltiles );			// tile heights in each clusters
+			building_tile_height = (var*)array_new( sizeof(var), NULL, building_alltiles );				// tile heights in each clusters
 			
 			for (i=0 ; i<building_alltiles ; i++)
 				{
@@ -259,9 +851,9 @@ sys_marker("b04");
 			
 sys_marker("b05");			
 
-			file_str_read( file_handle , NULL );
+			file_str_read( file_handle , NULL );																		// comment line
 			
-			building_tile_clearance = array_new( sizeof(char), NULL, building_alltiles );			// tile defaultclearance values in each clusters
+			building_tile_clearance = (char*)array_new( sizeof(char), NULL, building_alltiles );		// tile defaultclearance values in each clusters
 			
 			for (i=0 ; i<building_alltiles ; i++)
 				{
@@ -272,7 +864,7 @@ sys_marker("b05");
 //					int temp_i = (int)building_tile_clearance[i];
 //					printf("building_tile_clearance: %i" , temp_i);	
 				}	
-			
+#endif			
 			//---------------------------------------------------
 			
 			file_close(file_handle);
@@ -283,9 +875,9 @@ sys_marker("b05");
 		{
 			//---------------------------------------------------
 			// obstacle like entity - do not do anything
-			if ( (ent.AREA_SIZEX < 5) && (ent.AREA_SIZEY < 5))
+			if ( (ent.AREA_SIZEX < 4) && (ent.AREA_SIZEY < 4))
 				{
-					ent.ENT_TYPE = 0;			// obstacle
+					ent.ENT_TYPE = 0;																			// obstacle
 					return;	
 				}						
 			
@@ -302,7 +894,7 @@ sys_marker("b05");
 			VECTOR building_height_vec;
 			vec_zero(building_height_vec);
 			vec_for_max(building_height_vec,ent);
-			var building_height = building_height_vec.z / (var)GetMapTileSize();
+			var building_height = building_height_vec.z / GetMapTileSize();
 			
 			building_floors    = 1;
 			
@@ -318,20 +910,23 @@ sys_marker("b05");
 sys_marker("b06");
 			
 			// cluster types for each cluster
-			building_cluster_type = array_new_default( sizeof(char), NULL, building_clusters, (char)CLUS_BUILDING4 );		// (0 or) 33 - no access building	
+			building_cluster_type	= (char*)array_new( sizeof(char), NULL, building_clusters, CLUS_BUILDING4 );			// (0 or) 33 - no access building	
 			
-			// tile cluster numbers for each tile						
-			building_tile_cluster = array_new_default( sizeof(char), NULL, building_alltiles, (char)1 );							// 1 - cluster 1	
+			// bottleneck
+			building_cluster_bottleneck 	= (char*)array_new( sizeof(char), NULL, building_clusters, 1 );					// 1 - bottleneck, but does not matter
+			
+			// tile cluster numbers for each tile
+			building_tile_cluster 	= (char*)array_new( sizeof(char), NULL, building_alltiles, 1 );							// 1 - cluster 1	
 			
 			// tile types for each tile
-			building_tile_type = array_new_default( sizeof(char), NULL, building_alltiles, (char)0 );								// 0 - no access
+			building_tile_type 	= (char*)array_new( sizeof(char), NULL, building_alltiles );									// 0 - no access
 			
 			// tile heights for each tile	
-			building_tile_height = array_new_default( sizeof(var), NULL, building_alltiles, (var)0 );								// 0 or building_height(wrong!) : got from max vertex divided by tilesize, can affect arrow movement later...
+			building_tile_height = (var*)array_new( sizeof(var), NULL, building_alltiles );										// 0 or building_height(wrong!) : got from max vertex divided by tilesize, can affect arrow movement later...
 			
 			// tile clearance masks for level 1-2
-			building_tile_clearance = array_new_default( sizeof(char), NULL, building_alltiles, (char)0 );						// 0 - no access
-			
+			building_tile_clearance = (char*)array_new( sizeof(char), NULL, building_alltiles );								// 0 - no access
+						
 			//---------------------------------------------------		
 		}	
 	
@@ -350,18 +945,17 @@ sys_marker("b06");
 		
 sys_marker("sm2");
 	
-	building_cluster_id = (short*)sys_malloc(building_clusters * sizeof(short));
-	memset( building_cluster_id , (short)65535 , building_clusters * sizeof(short) );		// 65535 or 255, set to first byte value !
+	building_cluster_id = (short*)array_new( sizeof(short), NULL, building_clusters, 255 );
 	
 	//------------------------------------------------------------------------
 	// add new clusters to map , or reserve invalid ones - and fill data from database read from file (or defaults created)
 	
 sys_marker("sm3");
 	
-	for (i=0 ; i<building_clusters ; i++)
+	for (i=0; i<building_clusters; ++i)
 		{
 			// get a new cluster with default terrain cluster values
-			int temp_int = (int)TileToCluster3D((int)ent.ABSTILE_POS,0);									// ### get ground cluster of entity middle
+			int temp_int = (int)TileToClusterLevel3((int)ent.ABSTILE_POS,0);								// get parent cluster of entity middle		-> TileToClusterLevel3 in UE4
 			
 			int current_cluster_id = (int)TerrCluster_InitNewCluster( temp_int );						// get a new cluster id based on middle tile cluster id as parent	
 			
@@ -392,19 +986,20 @@ sys_marker("sm3");
 				{
 					SetClusterClusMidTileZ(current_cluster_id, 2);												// 0 ground, 1 for 1st floor, 2 for 2nd floor					
 				}
-			
-			SetClusterClusBottleneck(current_cluster_id, 1);													// always bottleneck		
-			
-			SetClusterClusBuildingID(current_cluster_id, ent.ENT_HANDLE);									// adding a building id (=building entity handle) for fast data access	
-			
+				
+sys_marker("smX");
+//			printf("bottleneck: %i" , (int)building_cluster_bottleneck[i]);
+			SetClusterClusBottleneck(current_cluster_id, (int)building_cluster_bottleneck[i]);		// was 1 = always bottleneck		
+sys_marker("smY");
+			SetClusterClusBuildingID(current_cluster_id, ent.ENT_HANDLE);									// adding a building id (=building entity handle) for fast data access				
 		}	
 	
 	//---------------------------------------------------------------------------------	
-	// rotate tile arrays and exchange custer xy sizes, if building entity is rotated - WIP !!!
+	// rotate tile arrays and exchange custer xy sizes, if building entity is rotated
 	
 	int direction = AngleToDirection(ent.pan);		
 	
-//	if (direction > 0)	// COMMENT OUT FOR TESTING 0 ROTATION
+	if (direction > 0)	// COMMENT OUT FOR TESTING 0 ROTATION
 		{
 			//----------------------------------------
 			
@@ -415,62 +1010,36 @@ sys_marker("sm3");
 			// does not change after rotations
 			int arraylength = building_alltiles;
 			
-			int elementsize;
-			
 			//----------------------------------------
 			
 			areax = (int)ent.AREA_SIZEX;
 			areay = (int)ent.AREA_SIZEY;	
 			
-			elementsize = sizeof(char);
-				
-//			building_tile_cluster 		= array_rotate_multi( building_tile_cluster, sizeof(char), &arraylength, direction, &areax, &areay, &defaultelement_char );	// XXX - void should be char
-			building_tile_cluster 		= array_rotate_multi_char( building_tile_cluster, &arraylength, direction, &areax, &areay );												// okay
-			
-//			building_tile_cluster 		= array_rotate( building_tile_cluster, elementsize, NULL, direction, &areax, &areay );														// XXX - void should be char
-//			building_tile_cluster 		= array_rotate_char( building_tile_cluster, NULL, direction, &areax, &areay );																// okay
+			building_tile_cluster 		= (char*)array3d_rotate( building_tile_cluster, sizeof(char), &arraylength, direction, &areax, &areay );
 			
 			//---
 			
 			areax = (int)ent.AREA_SIZEX;
 			areay = (int)ent.AREA_SIZEY;						
 			
-			elementsize = sizeof(char);
-			
-//			building_tile_type 			= array_rotate_multi( building_tile_type, sizeof(char), &arraylength, direction, &areax, &areay, &defaultelement_char );
-			building_tile_type	 		= array_rotate_multi_char( building_tile_type, &arraylength, direction, &areax, &areay );
-			
-//			building_tile_type 			= array_rotate( building_tile_type, elementsize, NULL, direction, &areax, &areay );			
-//			building_tile_type	 		= array_rotate_char( building_tile_type, NULL, direction, &areax, &areay );
+			building_tile_type	 		= (char*)array3d_rotate( building_tile_type, sizeof(char), &arraylength, direction, &areax, &areay );
 			
 			//---
 			
 			areax = (int)ent.AREA_SIZEX;
 			areay = (int)ent.AREA_SIZEY;
 			
-			elementsize = sizeof(var);
-				
-//			building_tile_height 		= array_rotate_multi( building_tile_height, sizeof(var), &arraylength, direction, &areax, &areay, &defaultelement_var );
-			building_tile_height 		= array_rotate_multi_var( building_tile_height, &arraylength, direction, &areax, &areay );
-			
-//			building_tile_height 		= array_rotate( building_tile_height, elementsize, NULL, direction, &areax, &areay );			
-//			building_tile_height 		= array_rotate_var( building_tile_height, NULL, direction, &areax, &areay );
+			building_tile_height 		= (var*)array3d_rotate( building_tile_height, sizeof(var), &arraylength, direction, &areax, &areay );
 			
 			//---
 			
 			areax = (int)ent.AREA_SIZEX;
 			areay = (int)ent.AREA_SIZEY;
-			
-			elementsize = sizeof(char);
-					
-//			building_tile_clearance 	= array_rotate_multi( building_tile_clearance, sizeof(char), &arraylength, direction, &areax, &areay, &defaultelement_char );		
-			building_tile_clearance		= array_rotate_multi_char( building_tile_clearance, &arraylength, direction, &areax, &areay );
-			
-//			building_tile_clearance 	= array_rotate( building_tile_clearance, elementsize, NULL, direction, &areax, &areay );					
-//			building_tile_clearance		= array_rotate_char( building_tile_clearance, NULL, direction, &areax, &areay );
+						
+			building_tile_clearance		= (char*)array3d_rotate( building_tile_clearance, sizeof(char), &arraylength, direction, &areax, &areay );
 			
 			//---
-			// !!! now keep areax-y !!!
+			// !!! now must keep areax-y to update original !!!
 			//---
 			
 			//----------------------------------------
@@ -483,25 +1052,29 @@ sys_marker("sm3");
 		}
 	
 	//---------------------------------------------------------------------------------
-
+	// define object tile area by bottom-left tile
+	
 sys_marker("sm4");		
 	
-//	// clearance generating functions use lower-left tile of entity area as reference
-//	// thus here it is not needed	to deal with it at all - only on object placement and on clearance area definition
+	// clearance generating functions use lower-left tile of entity area as reference
+	// thus here it is not needed	to deal with it at all - only on object placement and on clearance area definition
 	
-	//--------------------------------------------------------------------
-	// area size can be an even number !!! only in case of buildings !!!
-	// MODIFIED VERSION - TILE POSITION IS TO LEFT AND TO BOTTOM FROM OBJECT MIDDLE - FOR ANY ENTITY
+	// area size can be an even number !!!
+	// TILE POSITION IS TO LEFT AND TO BOTTOM FROM OBJECT MIDDLE - FOR ANY ENTITY
 	
-	int halfareax = (int)integer(ent.AREA_SIZEX / 2);
-	int halfareay = (int)integer(ent.AREA_SIZEY / 2);	
-		
-	//--------------------------------------------------------------------		
-	// set tiles to cluster id , and to type with conversion (and cost), and midz = ent.z+(var)(int)(height*GetMapTileSize())
+//	// bottom left corner - simple calculation	
+//	int halfareax = (int)integer(ent.AREA_SIZEX / 2);
+//	int halfareay = (int)integer(ent.AREA_SIZEY / 2);		
+//	int tempx_int = (int)ent.XTILE_POS - halfareax;
+//	int tempy_int = (int)ent.YTILE_POS - halfareay;	
 	
-	int tempx_int = (int)ent.XTILE_POS - halfareax;
-	int tempy_int = (int)ent.YTILE_POS - halfareay;
-
+	// get all corner tiles
+	GetClusterCorners((int)ent.XTILE_POS, (int)ent.YTILE_POS, (int)ent.AREA_SIZEX, (int)ent.AREA_SIZEY, building_corner_abstiles);
+	
+	// bottom left corner
+	int tempx_int = AbsTileToXTile(building_corner_abstiles[0]);
+	int tempy_int = AbsTileToYTile(building_corner_abstiles[0]);	
+	
 sys_marker(NULL);
 	
 	//--------------------------------------------------------------------	
@@ -553,16 +1126,21 @@ sys_marker("smf");
 										}									
 									SetTileBuildingID(actual_tile, ent.ENT_HANDLE);													// for all the 3 cases
 sys_marker("smg");									
-//									// if no change copy values from ground - useful for 1st floor only !!! - CAUSES ERRORS WHEN BUILDING IS RAISED UP FROM ITS DEFAULT PLACEMENT HEIGHT, AND UNDERGROUND PARTS APPEAR
-//									if (building_tile_type[actual_file_pos] == (char)2)
-//										{
-//											SetTileMidZ(actual_tile, actual_level, GetTileMidZ(actual_tile, 0));
-//										}
-//									// should be equal or higher than terrain!
-//									else
+									// if tile is not changwd, and building is not raised
+									if (
+											(building_tile_type[actual_file_pos] == (char)2) 
+											&& 
+											(GetTileMidZ(actual_tile, 0) <= ent.z + building_tile_height[actual_file_pos] * GetMapTileSize())
+										)
 										{
-											SetTileMidZ(actual_tile, actual_level, maxv( GetTileMidZ(actual_tile, 0) , (ent.z + building_tile_height[actual_file_pos] * (var)GetMapTileSize()) ));
-										}		
+											SetTileMidZ(actual_tile, actual_level, GetTileMidZ(actual_tile, 0));
+										}
+									// if tile is changed, or building is raised, it must use actual_tile_height
+									else
+										{
+											SetTileMidZ(actual_tile, actual_level, maxv( GetTileMidZ(actual_tile, 0) , (ent.z + building_tile_height[actual_file_pos] * GetMapTileSize()) ));
+										}
+											
 sys_marker("smf");
 									SetTileUnitSizeMask(actual_tile, actual_level-1, (int)building_tile_clearance[actual_file_pos]);								
 sys_marker(NULL);									
@@ -580,23 +1158,33 @@ sys_marker("sm5");
 	//-------------------------------------------------------------------------------
 	// set all new xy cluster sizes and their middle tile - cluster type cost level and bottleneck is already set - size and middle was only temp from area size and position
 	
-	for (k=0 ; k<building_clusters ; k++)
+	for (k=0; k<building_clusters; k++)
 		{
 			short temp_s = building_cluster_id[k];
-			TerrCluster_SetClusterXYSizeMiddle( temp_s );
+			
+			TerrCluster_SetClusterXYSizeMiddle( (int)temp_s );
 			wait_for(TerrCluster_SetClusterXYSizeMiddle);
 		} // ok
 		
 sys_marker(NULL);	
 sys_marker("sm6");
 	
+//	//-------------------------------------------------------------------------------
+//	// check whether parent cluster remained or has no tiles at all - should be reworked
+//	
+//	int parent_cluster = TileToClusterLevel3((int)ent.ABSTILE_POS, 0);
+//	
+//	TerrCluster_SetClusterXYSizeMiddle( parent_cluster );
+//	wait_for(TerrCluster_SetClusterXYSizeMiddle);
+//	
 	//-------------------------------------------------------------------------------
 	// set neighbours and walkable neighbours
 	
-	for (k=0 ; k<building_clusters ; k++)
+	for (k=0; k<building_clusters; k++)
 		{
 			short temp_s = building_cluster_id[k];
-			TerrCluster_SetClusterNeigWalkNeig( temp_s );
+			
+			TerrCluster_SetClusterNeigWalkNeig( (int)temp_s );
 			wait_for(TerrCluster_SetClusterNeigWalkNeig);
 		}	// ok
 
@@ -606,30 +1194,40 @@ sys_marker("sm7");
 	//-------------------------------------------------------------------------------
 	// update neighbour clusters - they probably have new neighbours and walkable neighbours; and may be needed to be subdivided !
 	
-	for (k=0 ; k<building_clusters ; k++)
+	// loop through all building clusters - to check all of their neighbours
+	for (k=0; k<building_clusters; k++)
 		{
 			short temp_s = building_cluster_id[k];
 			
+			// update neighbouring clusters - set earlier
 			for (i=0 ; i<MAX_NEIGHBOURS ; i++)
 				{
+					// actual neighbour to check
 					short neig_clus_s = (short)GetClusterClusNeighbours(temp_s, i);
 					
+					// valid cluster
 					if (neig_clus_s < (short)CLUS_NULL)
 						{
-							var subdivision_by_noacc = TerrCluster_DivideClusterByNoAccess(neig_clus_s);		// checks for not impassable tiles as start -
-																																		// valid only for ground clusters! but it is okay and protected														
+							//-------------------------------------
+							// subdivision
 							
+							var subdivision_by_noacc = TerrCluster_DivideClusterByNoAccess(neig_clus_s);		// checks for not impassable tiles as start -
+																																		// valid only for ground clusters! but it is okay and protected							
 							if (!subdivision_by_noacc)
 								{
+									// no subdivision - update only neighbour clusters of this building cluster
+									
+									// own area related
 									TerrCluster_SetClusterXYSizeMiddle(neig_clus_s);
 									wait_for(TerrCluster_SetClusterXYSizeMiddle);
 									
+									// neighbours
 									TerrCluster_SetClusterNeigWalkNeig(neig_clus_s);
 									wait_for(TerrCluster_SetClusterNeigWalkNeig);
-								}	// ok
+								}
 							else
 								{
-									// update neighbour clusters of neighbours as they should be updated to get new neighbours
+									// subdivision was made - update neighbours clusters of neighbour clusters of this building cluster, as they should be updated to get new neighbours
 									for (j=0 ; j<MAX_NEIGHBOURS ; j++)
 										{
 											short neigneig_clus_s = (short)GetClusterClusNeighbours(neig_clus_s, j);
@@ -640,18 +1238,7 @@ sys_marker("sm7");
 													wait_for(TerrCluster_SetClusterNeigWalkNeig);
 												}											
 										}							
-								}
-							
-							// *** ### subdivision by concave to convex, based on building area corner tile positions, thus 4 cases
-							// *** ### to avoid L U and O shaped clusters resulting in strange group movements around buildings
-							var subdivision_by_shape = 0;
-							
-							//...
-							
-							//...
-							
-							//...
-							
+								}														
 						}	// if <60000						
 				}	// for i
 		}	// for k
@@ -659,18 +1246,34 @@ sys_marker("sm7");
 sys_marker(NULL);	
 sys_marker("sm8");
 	
-	//-----------------------------------------------------------------
+	//--------------------------------------------------------------------
+	// subdivision by concave to convex, based on building area corner tile positions, thus 4 cases
+	// to avoid L U and O shaped clusters resulting in strange group movements around buildings
+#ifdef DEBUG_CLUSTERCORNERS	
+	wait(1);				// test - needed! for proper clearance maps - but why? - probably only when debug entities (flags) are placed on corner tiles
+#endif	
+	for (i=0; i<4; ++i)
+		{
+			TerrCluster_DivideClusterByClusterCorner(building_corner_abstiles[i], i);		
+			wait_for(TerrCluster_DivideClusterByClusterCorner);
+		}
+	
+	//--------------------------------------------------------------------
 	
 	ptr_remove(temp_str);
 	
-	sys_free(building_cluster_type);		
-	sys_free(building_tile_cluster);
-	sys_free(building_tile_type);
-	sys_free(building_tile_height);
-	sys_free(building_tile_clearance);
-	sys_free(building_cluster_id);
+	// sys_free() abd array_destroy() leaves the pointers in memory, 5 * 4 = 20 bytes
+	array_destroy( building_cluster_type );	
+	array_destroy( building_cluster_bottleneck );	
 	
-//	// = NULL?
+	array_destroy( building_tile_cluster );
+	array_destroy( building_tile_type );
+	array_destroy( building_tile_height );
+	array_destroy( building_tile_clearance );
+	
+	array_destroy( building_cluster_id );
+	
+	array_destroy( building_corner_abstiles ); 					// *** somehow unfreed !!!
 
 sys_marker(NULL);	
 sys_marker("sm9");
@@ -682,14 +1285,16 @@ sys_marker("sm9");
 										// or on partial destruction
 	
 	//--------------------------------------------------------------------
+	
 #ifdef BUILDING_DEBUG
 	wait(1);
-	ent.emask |= (DYNAMIC);		// needed for events
+	ent.emask |= (DYNAMIC);																									// needed for events
 	wait(1);
 	
-	ent.emask |= ENABLE_SCAN | ENABLE_DETECT | ENABLE_TOUCH | ENABLE_RELEASE | ENABLE_CLICK ; 		// *** release
-	ent.event = Terrain_BuildingEvent;																					// *** release
+	ent.emask |= ENABLE_SCAN | ENABLE_DETECT | ENABLE_TOUCH | ENABLE_RELEASE | ENABLE_CLICK ; 		
+	ent.event = Terrain_BuildingEvent;																					
 #endif
+
 sys_marker(NULL);	
 }
 
@@ -718,15 +1323,16 @@ function		Terrain_BuildingEvent()
 
 void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 {
+sys_marker("RBC");
+	//------------------------------------------------------------------------------------
 	int i,j,k,m;
 	
 	var temp_buildingid =  ent.ENT_HANDLE;
 	
+	//------------------------------------------------------------------------------------
 	// then cycle through clusters and write into an array those cluster id-s which corresponds to this entity, let it be max 10
-	k = BUILDING_MAXCLUSTERS;
-//	short temp_cluster_id[BUILDING_MAXCLUSTERS];		// 6
-	short* temp_cluster_id = (short*)sys_malloc(k * sizeof(short));
-	memset( temp_cluster_id , (short)65535 , k * sizeof(short) );
+	
+	short* temp_cluster_id 	= (short*)array_new( sizeof(short), NULL, BUILDING_MAXCLUSTERS, 255 );
 	
 	int temp_count = 0;
 	for (i=0;i<ClusterArrayLength;i++)
@@ -740,7 +1346,9 @@ void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 				}
 		}
 	
+	//------------------------------------------------------------------------------------
 	// protection
+	
 	if (temp_count == 0)
 		{
 //			printf("No cluster found!");
@@ -765,7 +1373,9 @@ void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 	short temp_1st_ground_clusid = 65535;
 	int	temp_1st_groundclus_counter = 0;
 	
+	//-----------------------------------------
 	// set level 1-2 tiles/costs/midz to no access/invalid
+	
 	for (j=tempy_int ; j<(tempy_int+(int)(ent.AREA_SIZEY)) ; j++)
 		{
 			for (i=tempx_int ; i<(tempx_int+(int)(ent.AREA_SIZEX)) ; i++)
@@ -834,7 +1444,9 @@ void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 				}
 		}
 	
+	//-----------------------------------------
 	// set unnecessary clusters invalid, update clusters kept
+	
 	if (temp_1st_groundclus_counter>0)
 		{
 //			printf("One main cluster!");
@@ -897,7 +1509,9 @@ void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 				}
 		}
 	
+	//-----------------------------------------
 //	// update neighbour clusters of neighbours as they should be updated to get new neighbours
+//	
 //	for (j=0 ; j<10 ; j++)
 //		{
 //			short neigneig_clus_s = GetClusterClusNeighbours(neig_clus_s, j);
@@ -908,390 +1522,9 @@ void		Terrain_ResetBuildingTilesClusters(ENTITY* ent)
 //					wait_for(TerrCluster_SetClusterNeigWalkNeig);
 //				}											
 //		}	
-	
-	sys_free(temp_cluster_id);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void		Terrain_DynamicInit()
-{
-	//---------------------------------
-	
-	int i,j;
-		
-	terrain_map_levels		= GetMapZLevels();											// map levels i.e. building floors present in level
-																										// currently it must be 2 i.e. BUILDING_LEVELS
-																										// later can be limited if no buildings are in the actual level,
-																										// to make faster pathfinding and clearance map updates
-	
-	//---------------------------------
-	// allocate handle arrays for entity categories
-	
-//	terrain_shrub_handlearray	= (var*)sys_malloc( TileArrayLength * sizeof(var) );	
-//	memset( terrain_shrub_handlearray , (var)0 , (TileArrayLength * sizeof(var)) ); 
-	
-	terrain_obstacle_handlearray	= (var*)sys_malloc( TileArrayLength * sizeof(var) );
-	memset( terrain_obstacle_handlearray , (var)0 , (TileArrayLength * sizeof(var)) ); 
-	
-	terrain_building_handlearray	= (var*)sys_malloc( TileArrayLength * sizeof(var) );		
-	memset( terrain_building_handlearray , (var)0 , (TileArrayLength * sizeof(var)) ); 
-	
-	//---------------------------------
-	// allocate clearance arrays for entity categories
-	
-//	terrain_shrub_clearancearray	= (char*)sys_malloc( TileArrayLength * sizeof(char) );
-//	memset( terrain_shrub_clearancearray , (char)CL_DEFAULT , (TileArrayLength * sizeof(char)) ); 
-	
-	terrain_obstacle_clearancearray	= (char*)sys_malloc( TileArrayLength * sizeof(char) );
-	memset( terrain_obstacle_clearancearray , (char)CL_DEFAULT , (TileArrayLength * sizeof(char)) ); 	
-	
-	terrain_building_clearancearray	= (char**)sys_malloc( terrain_map_levels * sizeof(char*) );		
-	for (j=0; j<terrain_map_levels; j++)
-		{
-			terrain_building_clearancearray[j] = (char*)sys_malloc( TileArrayLength * sizeof(char) );
-			
-			if (j==0)
-				{
-					memset( terrain_building_clearancearray[j] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 	// later summed to ground
-				}
-			else
-				{
-					memset( terrain_building_clearancearray[j] , (char)0 , TileArrayLength * sizeof(char) ); 				// summed only with units
-				}
-		}
-	
-	terrain_unit_clearancearray	= (char**)sys_malloc( terrain_map_levels * sizeof(char*) );
-	for( i=0 ; i<terrain_map_levels ; i++ )
-		{
-			terrain_unit_clearancearray[i]	= (char*)sys_malloc( TileArrayLength * sizeof(char) );
-			
-			memset( terrain_unit_clearancearray[i] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 			
-		}
-		
-	//---------------------------------
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void		Terrain_DynamicFree()
-{
-	
-sys_marker("DF0");
-
-	//----------------------------------------	
-	
-	int i,j;
-	
-	proc_kill2(Terrain_AllClearanceMapUpdate, NULL);
-	wait(1);
-	
-	//----------------------------------------	
-	//----------------------------------------
-	// shadow casting entity list
-	
-	if (terrain_shadowentity_array != NULL)
-		{
-			for (i=0;i<terrain_shadowentity_counter;i++)
-				{
-					set(terrain_shadowentity_array[i],SHADOW);
-				}
-			wait(1);
-			
-			for (i=0;i<terrain_shadowentity_counter;i++)
-				{
-					terrain_shadowentity_array[i].emask &= ~DYNAMIC;			
-				}
-			wait(1);
-			
-			for (i=0;i<terrain_shadowentity_counter;i++)
-				{
-					terrain_shadowentity_array[i] = NULL;
-		//			ptr_remove(terrain_shadowentity_array[i]);						// no !!! it would delete them
-				}
-			
-			for (i=0; i<terrain_shadowentity_counter; i++)
-				{
-					sys_free( terrain_shadowentity_array[i] );
-				}
-			sys_free(terrain_shadowentity_array);
-			terrain_shadowentity_array = NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------	
-	//----------------------------------------
-	// TILE MAPS
-	
-	//----------------------------------------	
-	// shrub handle map
-sys_marker("DFa");	
-//	if (terrain_shrub_handlearray != NULL)
-//		{
-//			sys_free(terrain_shrub_handlearray);		
-//			terrain_shrub_handlearray 		= NULL;
-//			wait(1);
-//		}
-	
-	//----------------------------------------	
-	// obstacle handle map
-sys_marker("DFb");	
-	if (terrain_obstacle_handlearray != NULL)
-		{
-			sys_free(terrain_obstacle_handlearray);	
-			terrain_obstacle_handlearray 	= NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------	
-	// building FLAG2 and ENT_TYPE reset
-
-sys_marker("DF2");	
-
-	// set entities to dynamic to be able to modify flag and skill
-	you = ent_next(NULL); 		
-	while (you) 						
-		{
-			if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
-				{
-					you.emask |= DYNAMIC;															
-				}
-			you = ent_next(you); 	
-		}
-	wait(1);
-	
-	// set again FLAG2 and reset ENT_TYPE to 0
-	you = ent_next(NULL); 		
-	while (you) 					
-		{
-			if ( AbsTileValid((int)you.ABSTILE_POS) )	
-				{
-					// restore for all entities
-					you.AREA_SIZEX = you.ORIG_AREA_SIZEX;
-					you.AREA_SIZEY = you.ORIG_AREA_SIZEY;
-					
-					if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
-						{					
-							if (you.ENT_TYPE == (var)2)
-								{
-									you.ENT_TYPE = 0;
-								}
-							else
-								{
-									set(you, FLAG2);										// keep obstacle building FLAG2 to have proper cluster and tile representation in MBposinfopanel.c
-								}														
-						}
-				}
-			you = ent_next(you); 
-		}	
-	wait(1);
-	
-	// set entities back to static for faster rendering
-	you = ent_next(NULL); 		
-	while (you) 					
-		{
-			if (( you.ENT_CATEGORY == (var)UIMODE_OBSTACLE ))
-				{					
-					you.emask &= ~DYNAMIC;										
-				}
-			you = ent_next(you); 	
-		}	
-	wait(1);
-	
-	//----------------------------------------	
-	// building handle map
-	
-	if (terrain_building_handlearray != NULL)
-		{
-			sys_free(terrain_building_handlearray);					
-			terrain_building_handlearray	= NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------	
-	//----------------------------------------	
-	// shrub clearance map
-
-sys_marker("DF3");	
-
-//	if (terrain_shrub_clearancearray != NULL)
-//		{
-//			sys_free(terrain_shrub_clearancearray);	
-//			terrain_shrub_clearancearray 		= NULL;
-//			wait(1);
-//		}
-	
-	//----------------------------------------	
-	// obstacle clearance map
-	
-	if (terrain_obstacle_clearancearray != NULL)
-		{
-			sys_free(terrain_obstacle_clearancearray);	
-			terrain_obstacle_clearancearray 	= NULL;	
-			wait(1);
-		}
-	
-	//----------------------------------------
-	//	building clearance map
-	
-	if (terrain_building_clearancearray != NULL)
-		{
-			for (i=0; i<terrain_map_levels; i++)
-				{
-					sys_free( terrain_building_clearancearray[i] );
-				}
-			sys_free(terrain_building_clearancearray);
-			terrain_building_clearancearray	= NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------
-	// summed clearance map	
-
-sys_marker("DF4");
-	
-	if (terrain_summed_clearancearray != NULL)
-		{
-			for (i=0; i<4; i++)
-				{			
-					for (j=0; j<terrain_map_levels; j++)
-					{
-						sys_free( (terrain_summed_clearancearray[i])[j] );
-					}
-					sys_free( terrain_summed_clearancearray[i] );
-				}
-			sys_free(terrain_summed_clearancearray);
-			terrain_summed_clearancearray	= NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------
-	// static clearance map	
-	
-	if (terrain_static_clearancearray != NULL)
-		{
-			for (i=0;i<4;i++)
-				{			
-					for (j=0; j<terrain_map_levels; j++)
-						{
-							sys_free( (terrain_static_clearancearray[i])[j] );
-						}
-					sys_free( terrain_static_clearancearray[i] );
-				}
-			sys_free(terrain_static_clearancearray);
-			terrain_static_clearancearray	= NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------
-	//	unit clearance map
-	
-	if (terrain_unit_clearancearray != NULL)
-		{
-			for (i=0; i<terrain_map_levels; i++)
-				{
-					sys_free( terrain_unit_clearancearray[i] );
-				}
-			sys_free(terrain_unit_clearancearray);
-			terrain_unit_clearancearray = NULL;
-			wait(1);
-		}
-	
-	//----------------------------------------	
-	//----------------------------------------
-	// CLUSTER MAPS
-
-sys_marker("DF5");	
-	
-	//----------------------------------------
-	// group map
-	
-	if (terrain_group_clusterarray != NULL)
-		{
-			sys_free(terrain_group_clusterarray);
-			terrain_group_clusterarray = NULL;	
-			wait(1);
-		}
-	
-	//----------------------------------------
-	
-sys_marker(NULL);
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void		Terrain_DynamicCreate()
-{
-	//----------------------------------------------------		
-	
-	set( map_loadpanel , SHOW);
-	set( map_loadtext1 , SHOW);	
-	wait(3);			
-	
 	//-----------------------------------------
 	
-	int i, j, k;
-	var your_handle;
-	int your_abstile_pos;
-	
-	//-----------------------------------------
-	// allocate data holders
-{}	
-#ifdef DEBUG_PLAY02		
-	str_cpy(terrain_progress_message, "Dynamic Data");
-	wait(3);	
-#endif
-	
-	Terrain_DynamicInit();
-	wait_for(Terrain_DynamicInit);
-	
-	//-----------------------------------------
-	// fill data holders, create corresponding clearance maps - slower than one common loop
-	
-	Terrain_DynamicBuildings();
-	wait_for(Terrain_DynamicBuildings);
-	
-//	Terrain_DynamicShrubs();
-//	wait_for(Terrain_DynamicShrubs);
-	
-	Terrain_DynamicObstacles();
-	wait_for(Terrain_DynamicObstacles);
-	
-	Terrain_DynamicShadowEntities();
-	wait_for(Terrain_DynamicShadowEntities);	
-		
-	//------------------------------------------------
-	// create summed maps from entity maps by merging them
-	
-	Terrain_DynamicSummedMap();
-	wait_for(Terrain_DynamicSummedMap);
-	
-	Terrain_DynamicStaticMap();
-	wait_for(Terrain_DynamicStaticMap);
-	
-	Terrain_DynamicGroupMap();
-	wait_for(Terrain_DynamicGroupMap);
-	
-	//------------------------------------------------------------------------------
-
-#ifdef DEBUG_PLAY02		
-	str_cpy(terrain_progress_message, "");
-	str_cpy(terrcluster_progress_message, "");
-	wait(3);
-#endif
-	
-	reset( map_loadpanel , SHOW);
-	reset( map_loadtext1 , SHOW);			
-	
-	//------------------------------------------------------------------------------
+	array_destroy(temp_cluster_id);
 }
 
 
@@ -1312,7 +1545,7 @@ void		Terrain_DynamicBuildings()
 		{
 			if ( AbsTileValid((int)you.ABSTILE_POS) )	
 				{
-					// store for all entities
+					// store for all entities !
 					you.ORIG_AREA_SIZEX = you.AREA_SIZEX;
 					you.ORIG_AREA_SIZEY = you.AREA_SIZEY;
 					
@@ -1454,7 +1687,11 @@ void		Terrain_DynamicObstacles()
 						{
 							your_handle 		= handle(you);																// from handle
 							your_abstile_pos 	= (int)you.ABSTILE_POS;													// from skill	
-															
+							
+							// set rotated area					
+							
+							//...
+							
 							// set tile handle map
 							terrain_obstacle_handlearray[your_abstile_pos] = your_handle;
 							
@@ -1472,7 +1709,7 @@ void		Terrain_DynamicObstacles()
 void		Terrain_DynamicShadowEntities()
 {
 	//------------------------------------------------------------------------------
-	
+sys_marker("SE0");	
 	terrain_shadowentity_counter = 0;																					// required to allocate shadow entity list
 	
 	you = ent_next(NULL); 																									// get first entity	
@@ -1501,8 +1738,7 @@ void		Terrain_DynamicShadowEntities()
 	//------------------------------------------------------------------------------
 	// shadow entity list for switching them on/off runtime for better performance
 		
-	terrain_shadowentity_array = (ENTITY**)sys_malloc( terrain_shadowentity_counter * sizeof(ENTITY*) );	
-	memset( terrain_shadowentity_array , (ENTITY*)0 , terrain_shadowentity_counter * sizeof(ENTITY*) ); 
+	terrain_shadowentity_array = (ENTITY**)array_new( sizeof(ENTITY), NULL, terrain_shadowentity_counter, 0 );
 	
 	//------------------------------------------------------------------------------
 	
@@ -1546,31 +1782,102 @@ void		Terrain_DynamicShadowEntities()
 		{
 			terrain_shadow_end = sky_loddistance3 * 2.5;
 		}
-	
+sys_marker(NULL);	
 	//------------------------------------------------------------------------------
+}
+
+
+void		Terrain_DynamicStaticMap()
+{
+sys_marker("DXM");
+	// create 4 terrain clearance map arrays, for each level
+	int i,j,k;
+	
+	// dynamic allocation of clearance maps : capability, level, abstile	
+	terrain_static_clearancearray = (char***)array_new( sizeof(char**), NULL, 4 );
+	
+	// capability
+	for (j=0; j<4; ++j)
+		{					
+			terrain_static_clearancearray[j] = (char**)array_new( sizeof(char*), NULL, terrain_map_levels );
+			
+			// level2
+			for (k=0; k<terrain_map_levels; ++k)
+				{
+					(terrain_static_clearancearray[j])[k] = (char*)array_new( sizeof(char), NULL, TileArrayLength, CL_DEFAULT );
+					
+					// create realistic results ready for controlled unit placement
+					for( i=0 ; i<TileArrayLength ; ++i)
+						{
+							// ground
+//							if (!(GetTileBuildingID(i) > (var)0))								// this line caused a bug - no clearance around buildings !!!
+							if (!BuildingTile(i))
+								{
+									// j : unit capability
+									if (j==0)
+										{
+											// (ground and buildings) and (shrubs and obstacles)
+//											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , minv( (var)(int)terrain_shrub_clearancearray[i] , (var)(int)terrain_obstacle_clearancearray[i] ) );	
+											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );																					
+										}
+									else if (j==1)
+										{
+											// (ground and buildings) and (shrubs and obstacles)
+//											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , minv( (var)(int)terrain_shrub_clearancearray[i] , (var)(int)terrain_obstacle_clearancearray[i] ) );																						
+											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );																																	
+										}
+									else if (j==2)
+										{
+											// (ground and buildings) and obstacles
+											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );
+										}
+									else if (j==3)
+										{
+											// ground
+											((terrain_static_clearancearray[j])[k])[i] = (char)GetTileUnitSize(i, j);			
+										}
+								}
+							// bulding floor
+							else
+								{
+									// j : unit capability
+									if (j<3)
+										{
+											// buildings only
+											((terrain_static_clearancearray[j])[k])[i] = (terrain_building_clearancearray[k])[i];
+										}
+									else
+										{
+											// set it only once in game
+											((terrain_static_clearancearray[j])[k])[i] = (char)0;
+										}
+								}
+							
+						}																				
+				}		
+		}
+sys_marker(NULL);		
 }
 
 
 void		Terrain_DynamicSummedMap()
 {
+sys_marker("DSM");	
 	// create 4 terrain clearance map arrays, for each level
 	int i,j,k;
 	
-	// dynamic allocation of clearance maps : capability, level, abstile
-	terrain_summed_clearancearray = (char***)sys_malloc( 4 * sizeof(char**) );		
+	// dynamic allocation of clearance maps : capability, level, abstile	
+	terrain_summed_clearancearray = (char***)array_new( sizeof(char**), NULL, 4 );
 	
 	// capability
 	for (j=0; j<4; j++)
 		{					
-			terrain_summed_clearancearray[j] = (char**)sys_malloc( terrain_map_levels * sizeof(char*) );
+			terrain_summed_clearancearray[j] = (char**)array_new( sizeof(char*), NULL, terrain_map_levels );
 			
 			// level
 			for (k=0; k<terrain_map_levels; k++)
 				{
-					(terrain_summed_clearancearray[j])[k] = (char*)sys_malloc( TileArrayLength * sizeof(char) );
-					
-					// fill with default values
-					memset( (terrain_summed_clearancearray[j])[k] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 
+					(terrain_summed_clearancearray[j])[k] = (char*)array_new( sizeof(char), NULL, TileArrayLength, CL_DEFAULT );
 					
 					// create realistic results ready for controlled unit placement
 					for( i=0 ; i<TileArrayLength ; i++ )
@@ -1622,104 +1929,27 @@ void		Terrain_DynamicSummedMap()
 						}																				
 				}		
 		}
-}
-	
-
-void		Terrain_DynamicStaticMap()
-{
-	// create 4 terrain clearance map arrays, for each level
-	int i,j,k;
-	
-	// dynamic allocation of clearance maps : capability, level, abstile
-	terrain_static_clearancearray = (char***)sys_malloc( 4 * sizeof(char**) );		
-	
-	// capability
-	for (j=0; j<4; j++)
-		{					
-			terrain_static_clearancearray[j] = (char**)sys_malloc( terrain_map_levels * sizeof(char*) );
-			
-			// level
-			for (k=0; k<terrain_map_levels; k++)
-				{
-					(terrain_static_clearancearray[j])[k] = (char*)sys_malloc( TileArrayLength * sizeof(char) );
-					
-					// fill with default values
-					memset( (terrain_static_clearancearray[j])[k] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 
-					
-					// create realistic results ready for controlled unit placement
-					for( i=0 ; i<TileArrayLength ; i++ )
-						{
-							// ground
-//							if (!(GetTileBuildingID(i) > (var)0))								// this line caused a bug - no clearance around buildings !!!
-							if (!BuildingTile(i))
-								{
-									// j : unit capability
-									if (j==0)
-										{
-											// (ground and buildings) and (shrubs and obstacles)
-//											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , minv( (var)(int)terrain_shrub_clearancearray[i] , (var)(int)terrain_obstacle_clearancearray[i] ) );	
-											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );																					
-										}
-									else if (j==1)
-										{
-											// (ground and buildings) and (shrubs and obstacles)
-//											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , minv( (var)(int)terrain_shrub_clearancearray[i] , (var)(int)terrain_obstacle_clearancearray[i] ) );																						
-											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );																																	
-										}
-									else if (j==2)
-										{
-											// (ground and buildings) and obstacles
-											((terrain_static_clearancearray[j])[k])[i] = (char)(int)minv( minv( (var)GetTileUnitSize(i, j) , (var)(int)(terrain_building_clearancearray[k])[i] ) , (var)(int)terrain_obstacle_clearancearray[i] );
-										}
-									else if (j==3)
-										{
-											// ground
-											((terrain_static_clearancearray[j])[k])[i] = (char)GetTileUnitSize(i, j);			
-										}
-								}
-							// bulding floor
-							else
-								{
-									// j : unit capability
-									if (j<3)
-										{
-											// buildings only
-											((terrain_static_clearancearray[j])[k])[i] = (terrain_building_clearancearray[k])[i];
-										}
-									else
-										{
-											// set it only once in game
-											((terrain_static_clearancearray[j])[k])[i] = (char)0;
-										}
-								}
-							
-						}																				
-				}		
-		}
+sys_marker(NULL);		
 }
 
 
 void		Terrain_DynamicGroupMap()
 {
+sys_marker("DGM");
 	//---------------------------------
 	// shows how many groups are in a cluster - 0 if none - used by group pathfinder as a cluster cost penalty	
 	
-	terrain_group_clusterarray = (char*)sys_malloc( ClusterArrayLength * sizeof(char) );		
-	memset( terrain_group_clusterarray , (char)0 , ClusterArrayLength * sizeof(char) ); 
+	terrain_group_clusterarray 	= (char*)array_new( sizeof(char), NULL, ClusterArrayLength, 0 );	
 	
 	// update is in group update loop !
 	//---------------------------------	
+sys_marker(NULL);
 }
 
 
 void		Terrain_DynamicGroupMapRecreate()
 {
-	
-	if (terrain_group_clusterarray != NULL)
-		{
-			sys_free(terrain_group_clusterarray);
-			terrain_group_clusterarray = NULL;	
-		}
+	array_destroy(terrain_group_clusterarray);
 	
 	Terrain_DynamicGroupMap();
 	wait_for(Terrain_DynamicGroupMap);
@@ -1769,11 +1999,11 @@ void		Terrain_SummedClearanceMapUpdate(int clearancemapnum, int fromlevel, int t
 {	
 	int i,j;
 	
-	// not necessary to clear !!! because all values are simply overwritten
-	//memset( (terrain_summed_clearancearray[clearancemapnum])[j] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 	
-	
 	for( j=fromlevel ; j<tolevel ; j++ )
 		{
+			// not necessary to clear !!! because all values are simply overwritten
+			//memset( (terrain_summed_clearancearray[clearancemapnum])[j] , (char)CL_DEFAULT , TileArrayLength * sizeof(char) ); 	
+			
 			for( i=0 ; i<TileArrayLength ; i++ )
 				{
 					// non building
@@ -1813,7 +2043,7 @@ void		Terrain_UnitClearanceMapUpdate()
 	
 	for(i=0; i<(int)totalunits; i++)
 		{				
-			Terrain_SetClearance_Unit_Simple( terrain_unit_clearancearray , play02_unit_array[i].myentity );	
+			Terrain_SetClearance_Unit_Simple( terrain_unit_clearancearray , rtsunitarray[i].myentity );	
 		}				
 }
 
@@ -1922,7 +2152,7 @@ void		Terrain_SetClearance_AroundBuilding( char** arraytoset , ENTITY* ent )
 	
 	//--------------------------------------------------------------------
 	
-	int temp, temp_n, tempx, tempy, tempflag;
+	int temp, temp_n;
 	int i,j,k;
 	
 	for (i=0 ; i<(ent.AREA_SIZEX +2) ; i++)
@@ -2022,41 +2252,41 @@ void		Terrain_SetClearance_NonBuilding_Tile0( char* arraytoset, int abstile )
 	for (i=0 ; i<(1 +4) ; i++)
 		{
 			for (j=0 ; j<(1 +4) ; j++)
-			{
-				temp = a + i + j * GetMapTilesX();
-				
-				if ( AbsTileValid(temp) ) // protection
 				{
-					if (!BuildingTile(temp))
-					{
-						// 0 area - faster
-						if ((i==3) || (j==3))
+					temp = a + i + j * GetMapTilesX();
+					
+					if ( AbsTileValid(temp) ) // protection
 						{
-							arraytoset[temp] = (char)0;	// no minv needed :)
+							if (!BuildingTile(temp))
+								{
+									// 0 area - faster
+									if ((i==3) || (j==3))
+										{
+											arraytoset[temp] = (char)0;	// no minv needed :)
+										}
+									// 1 area border - else
+									if ( 		((i==1) && (j>0) && (j<(1 +3)))
+											|| ((i==(1 +2)) && (j>0) && (j<(1 +3)))
+											|| ((j==1) && (i>0) && (i<(1 +3)))
+											|| ((j==(1 +2)) && (i>0) && (i<(1 +3)))
+										)
+											{
+												arraytoset[temp] = (char)(int)minv( (var)1 , (var)(int)arraytoset[temp] );
+											}
+									// 3 area border
+									else if ( 
+														(i==0)
+													|| (i==(1 +3))
+													|| (j==0)
+													|| (j==(1 +3))
+												)
+												{
+													arraytoset[temp] = (char)(int)minv( (var)3 , (var)(int)arraytoset[temp] );
+												}									
+								}
 						}
-						// 1 area border - else
-						if ( ((i==1) && (j>0) && (j<(1 +3)))
-						|| ((i==(1 +2)) && (j>0) && (j<(1 +3)))
-						|| ((j==1) && (i>0) && (i<(1 +3)))
-						|| ((j==(1 +2)) && (i>0) && (i<(1 +3)))
-						)
-						{
-							arraytoset[temp] = (char)(int)minv( (var)1 , (var)(int)arraytoset[temp] );
-						}
-						// 3 area border
-						else if ( 
-						( (i==0) )
-						|| ( (i==(1 +3)) )
-						|| ( (j==0) )
-						|| ( (j==(1 +3)) )
-						)
-						{
-							arraytoset[temp] = (char)(int)minv( (var)3 , (var)(int)arraytoset[temp] );
-						}									
-					}
+					
 				}
-				
-			}
 		}
 }
 
@@ -2177,10 +2407,10 @@ void		Terrain_SetClearance_Unit( char** arraytoset , ENTITY* ent )							// leve
 												}
 											// 3 area border
 											else if ( 
-																( (i==0) )
-															|| ( (i==(ent.AREA_SIZEX +3)) )
-															|| ( (j==0) )
-															|| ( (j==(ent.AREA_SIZEY +3)) )
+																(i==0)
+															|| (i==(ent.AREA_SIZEX +3))
+															|| (j==0)
+															|| (j==(ent.AREA_SIZEY +3))
 														)
 												{
 													value_to_set = 3;
@@ -2209,9 +2439,9 @@ void		Terrain_SetClearance_Unit( char** arraytoset , ENTITY* ent )							// leve
 											else				// non-ladder
 												{
 													if (
-															( (height_diff>=(var)0) && (height_diff<=((var)MAX_WALK_Z_DIFF*(var)GetMapTileSize())) )			// 1.25 walk up difference
+															( (height_diff>=(var)0) && (height_diff<=((var)MAX_WALK_Z_DIFF * GetMapTileSize())) )			// 1.25 walk up difference
 															||
-															( (height_diff<(var)0) && (height_diff>=(-(var)MAX_WALK_Z_DIFF*1.5*(var)GetMapTileSize())) )	// 1.25*1.5 walk down difference
+															( (height_diff<(var)0) && (height_diff>=(-(var)MAX_WALK_Z_DIFF * 1.5 * GetMapTileSize())) )	// 1.25*1.5 walk down difference
 														)
 														{
 															(arraytoset[k])[temp] = (char)(int)minv( value_to_set , (var)(int)(arraytoset[k])[temp] );
@@ -2330,9 +2560,9 @@ void		Terrain_SetClearance_Unit_Simple( char** arraytoset , ENTITY* ent )
 											else	// non-ladder
 												{
 													if (
-													( (height_diff >= (var)0) && (height_diff <= ((var)MAX_WALK_Z_DIFF*(var)GetMapTileSize())) )		// 1.25 walk up difference
+													( (height_diff >= (var)0) && (height_diff <= ((var)MAX_WALK_Z_DIFF * GetMapTileSize())) )		// 1.25 walk up difference
 													||
-													( (height_diff < (var)0) && (height_diff >= (-(var)MAX_WALK_Z_DIFF*1.5*(var)GetMapTileSize())) )	// 1.25*1.5 walk down difference
+													( (height_diff < (var)0) && (height_diff >= (-(var)MAX_WALK_Z_DIFF * 1.5 * GetMapTileSize())) )	// 1.25*1.5 walk down difference
 													)
 														{
 															(arraytoset[k])[temp] = (char)(int)minv( value_to_set , (var)(int)(arraytoset[k])[temp] );

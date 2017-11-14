@@ -14,7 +14,7 @@
 ///////////////////////////////////
 // variables 
 
-char		map_tilesize 				= 32;							
+var		map_tilesize 				= 32;							
 var*		terrhmp_watervertices	= NULL;
 
 /////////////////////////////////////

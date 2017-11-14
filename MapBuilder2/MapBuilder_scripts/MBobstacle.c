@@ -107,6 +107,9 @@ void		Obstacle_Create(	STRING* filename,
 					ent.skill42 = floatv(25);						// speed	y
 					ent.skill43 = floatv(35);						//	oscillation	
 					ent.skill44 = floatv(ent.max_z/3);			// bending position
+					
+//					ent.skill45 = floatv(sinv(ent.pan));
+//					ent.skill46 = floatv(cosv(ent.pan));
 				}
 			else if (my_unlit)
 				{

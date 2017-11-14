@@ -102,7 +102,7 @@ outModelVS ModelVS
 	// lighting
 	
 	// final color	
-	Out.Color = (vecAmbient * vecLight) + (vecEmissive * vecColor);			// ambient + emissive
+	Out.Color = (vecAmbient + vecEmissive) + vecColor;								// ambient + emissive + rgb
 		
 {}
 #ifndef PER_PIXEL_LIGHTS
@@ -193,21 +193,21 @@ outModelVS2 ModelVS2
 	//----------------------------------------------------------------
 	// lighting		
 	
-	Out.Color = (vecAmbient * vecLight) + (vecEmissive * vecColor);				// ambient + emissive
+	Out.Color = (vecAmbient + vecEmissive) + vecColor;								// ambient + emissive + rgb
 	
 	// Sun lighting 
 	
 	float LightIntensity = saturate(dot(WorldNormal, -vecSunDir));
 	
 	// diffuse
-	float4 Diffuse = scsm_brightness * 5.0 * vecDiffuse * LightIntensity * vecSunColor * vecLight;
+	float4 Diffuse = scsm_brightness * 1.0 * vecDiffuse * LightIntensity * vecSunColor;
 	
 	// specular
 	float4 Specular = 0;
 	if (LightIntensity > 0.33f)
 		{
 			float3 Halfway  = saturate(dot(normalize(ViewDir - vecSunDir), WorldNormal));
-			Specular = vecSpecular * pow( dot(WorldNormal, Halfway) , fPower) * vecSunColor * vecLight;	
+			Specular = vecSpecular * pow( dot(WorldNormal, Halfway) , fPower) * vecSunColor;	
 		}
 	
 	// final color	

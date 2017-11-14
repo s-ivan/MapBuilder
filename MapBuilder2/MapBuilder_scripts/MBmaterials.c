@@ -67,7 +67,7 @@ sys_marker("shi");
 				}
 			
 			if (shadow_stencil > (var)-1)
-				{					
+				{				
 					effect_load(mtl_detail		,"obj_animSprite1_MB.fx");
 					effect_load(mtl_shrub		,"obj_animShrub1_MB.fx");
 					effect_load(mtl_grass		,"obj_animGrass1_MB.fx");
@@ -97,7 +97,10 @@ sys_marker("shi");
 							effect_load(mtl_shaded,		NULL);
 						}
 					effect_load(mtl_sky			,		NULL);
-						
+					
+//					mtl_tree.flags &= ~ENABLE_TREE;
+//					mtl_tree.event = NULL;
+					
 					// RTS unit materials
 					effect_load(mtl_bonesanim	,"obj_bones_MB.fx");		// FIL		// no pixel shader
 				}
@@ -116,10 +119,13 @@ sys_marker("shi");
 					// 3DGS materials can be used to not to have self shadow
 //					effect_load(mtl_terrain		,"sc_obj_model_MB.fx");					// not used, in action own shader
 					effect_load(mtl_model		,"sc_obj_model_MB.fx");
-					effect_load(mtl_sprite		,"sc_obj_sprite_stand_MB.fx");	
+					effect_load(mtl_sprite		,"sc_obj_sprite_st_MB.fx");	
 					effect_load(mtl_flat			,"sc_obj_level_MB.fx");
 					effect_load(mtl_shaded		,"sc_obj_level_MB.fx");
 					effect_load(mtl_sky			,"sc_obj_sky_MB.fx");
+					
+//					mtl_tree.flags |= ENABLE_TREE;											// ENABLE_RENDER or ENABLE_TREE
+//					mtl_tree.event = sc_tree_billboard_event;
 					
 					// RTS unit materials 
 {}
@@ -129,8 +135,23 @@ sys_marker("shi");
 					effect_load(mtl_bonesanim	,"obj_bones_MB.fx");		// FIL		// no pixel shader
 #endif					
 				}						
+		
+			Materials_ShadersLoop();
 		}
-sys_marker(NULL);	
+}
+
+
+void		Materials_ShadersLoop()
+{
+	while(1)
+		{
+			// slightly faster to set here material skills than by material events
+			
+			mtl_tree->skill1 = floatv( sinv(camera->pan) );
+			mtl_tree->skill2 = floatv( cosv(camera->pan) );			
+			
+			wait(1);
+		}
 }
 
 
@@ -138,6 +159,8 @@ void		Materials_ShadersRemove()
 {
 	if (main_engineversion > 0) 
 		{
+			proc_kill2(Materials_ShadersLoop, NULL);
+			
 //			if (main_blur)
 				{
 					effect_load(mtl_shadow, NULL);
@@ -150,6 +173,9 @@ void		Materials_ShadersRemove()
 					pp_set(camera, NULL);	
 //					wait(3);
 				}
+			
+//			mtl_tree.flags &= ~ENABLE_TREE;
+//			mtl_tree.event = NULL;
 				
 			if ((shadow_stencil == (var)-1) || (shadow_stencil == (var)8))
 				{
@@ -442,6 +468,8 @@ void		Materials_Load_Materials_mat(char* file_name)
 			Materials_Load_Materials_Any( mat_sky , file_handle );
 			wait_for(Materials_Load_Materials_Any);
 			
+//			printf( "Basic materials loaded");
+			
 			//terrain
 			if (terrain_entity)
 				{
@@ -473,7 +501,10 @@ void		Materials_Load_Materials_mat(char* file_name)
 					wait_for(Materials_Load_Materials_Any);			
 						// copy to terrain_single_mat
 						Materials_Load_Materials_Pair( water_multi_mat , water_single_mat );	
-				}				
+				}	
+			
+//			printf( "Terrain / Water materials loaded");
+						
 			//mtl_detail
 			Materials_Load_Materials_Any( mtl_detail , file_handle );
 			wait_for(Materials_Load_Materials_Any);
@@ -505,11 +536,13 @@ void		Materials_Load_Materials_mat(char* file_name)
 //			//mtl_unit
 //			Materials_Load_Materials_Any( mtl_unit , file_handle );
 //			wait_for(Materials_Load_Materials_Any);
-		
+			
+//			printf( "MB materials loaded");
+			
 			file_close(file_handle);
 		}
 	
-//	printf( "Material Settings Loaded: %s" , _chr(file_name) );	
+//	printf( "Material Settings Loaded: %s" , _chr(file_name) );
 	
 	//----------------------------------------------
 	// shader set file
@@ -574,6 +607,8 @@ void		Materials_Load_Materials_mat(char* file_name)
 									
 									wait(3);
 									
+//									printf( "Shaders cleared");
+									
 									// load system	material effects	
 									Materials_Load_Shader_Any(mtl_terrain, file_handle);
 									wait_for(Materials_Load_Shader_Any);
@@ -593,6 +628,8 @@ void		Materials_Load_Materials_mat(char* file_name)
 									wait_for(Materials_Load_Shader_Any);
 									Materials_Load_Shader_Any(mtl_sky, file_handle);									
 									wait_for(Materials_Load_Shader_Any);
+									
+//									printf( "Basic Shaders loaded");
 									
 									// reserve	
 									File_Read_Asc(file_handle, NULL);						
@@ -621,6 +658,9 @@ void		Materials_Load_Materials_mat(char* file_name)
 											
 											effect_load(water_single_mat, water_multi_mat.effect);		// can be NULL				
 										}			
+										
+//									printf( "Terrain / Water Shaders loaded");	
+									
 									wait_for(Materials_Load_Shader_Any);
 									Materials_Load_Shader_Any(mtl_detail, file_handle);
 									wait_for(Materials_Load_Shader_Any);
@@ -638,6 +678,8 @@ void		Materials_Load_Materials_mat(char* file_name)
 									wait_for(Materials_Load_Shader_Any);
 									Materials_Load_Shader_Any(mtl_building, file_handle);
 									wait_for(Materials_Load_Shader_Any);
+									
+//									printf( "MB Shaders loaded");
 									
 //									// reserve
 //									file_str_read(file_handle, NULL);

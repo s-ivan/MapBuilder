@@ -695,6 +695,13 @@ void		TerrHmp_Tx_LoadSkin(STRING* temp_str, var skin_num)
 	// old texture
 	
 	BMAP* skin_bmap = bmap_for_entity(terrain_entity , skin_num);
+	
+	// null skin
+	if (skin_bmap == NULL)
+		{
+			skin_bmap = bmap_createblack(512,512,32);
+		}
+	
 	wait(1);			
 	
 	// if dds, convert
@@ -786,6 +793,13 @@ void		TerrHmp_Tx_LoadSkin_KeepAlpha(STRING* temp_str, var skin_num)
 	// old texture
 	
 	BMAP* skin_bmap = bmap_for_entity(terrain_entity , skin_num);	
+	
+	// null skin
+	if (skin_bmap == NULL)
+		{
+			skin_bmap = bmap_createblack(512,512,32);
+		}	
+	
 	wait(1);
 	
 	// if dds, convert

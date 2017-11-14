@@ -45,25 +45,33 @@ void		TerEdit_Tx_Init()
 	teredit_tx_count = ent_status(terrain_entity,8);		// ent_skins(terran_entity);	// does not change		
 	
 	//---------------------------------------------------------------------------------------
-	// convert DDS skin textures to uncompressed
+	// convert DDS skin textures to uncompressed, mipmap other textures
+	
 	for(i=0; i<ent_status(terrain_entity, 8); i++)	
 		{
-			// convert skin if necessary
-			if (bmap_format(ent_getskin(terrain_entity, i+1)) < (var)565)			// test: does it contain actual format???
-//			if (bmap_format(bmap_for_entity(terrain_entity, i+1)) < (var)565)		// probably it returns original format!!!
-				{			
-					if ((ent_status(terrain_entity,8) < (var)3) && (i==0))
-						{
-//							ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(ent_getskin(terrain_entity,i+1), 888)) , i+1 );			// error if single skin was modified, tx edit was left, and init again 
-							ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(bmap_for_entity(terrain_entity,i+1), 888)) , i+1 );	// works - but becomes black if tex set or colour fill was applied before
-//							ent_setskin( terrain_entity , bmap_to_format(bmap_for_entity(terrain_entity,i+1), 888) , i+1 );							// becomes black immediately
-						}
+			if (ent_getskin(terrain_entity, i+1) != NULL)
+				{
+					if (bmap_format(ent_getskin(terrain_entity, i+1)) < (var)565)			// test: does it contain actual format???
+//					if (bmap_format(bmap_for_entity(terrain_entity, i+1)) < (var)565)		// probably it returns original format!!!
+						{			
+							if ((ent_status(terrain_entity,8) < (var)3) && (i==0))
+								{
+//									ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(ent_getskin(terrain_entity,i+1), 888)) , i+1 );			// error if single skin was modified, tx edit was left, and init again 
+									ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(bmap_for_entity(terrain_entity,i+1), 888)) , i+1 );	// works - but becomes black if tex set or colour fill was applied before
+//									ent_setskin( terrain_entity , bmap_to_format(bmap_for_entity(terrain_entity,i+1), 888) , i+1 );							// becomes black immediately
+								}
+							else
+								{
+//									ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(ent_getskin(terrain_entity,i+1), 8888)) , i+1 );		// error if single skin was modified, tx edit was left, and init again
+									ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(bmap_for_entity(terrain_entity,i+1), 8888)) , i+1 );	// works - mipmap needed ! 
+								}					
+						}	
 					else
 						{
-//							ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(ent_getskin(terrain_entity,i+1), 8888)) , i+1 );		// error if single skin was modified, tx edit was left, and init again
-							ent_setskin( terrain_entity , bmap_to_mipmap(bmap_to_format(bmap_for_entity(terrain_entity,i+1), 8888)) , i+1 );	// works - mipmap needed ! 
-						}					
-				}	
+							ent_setskin( terrain_entity , bmap_to_mipmap(bmap_for_entity(terrain_entity,i+1)) , i+1 );
+						}
+				}
+			
 			wait(1);	// needed
 		}
 	
@@ -932,51 +940,115 @@ void		TerEdit_Tx_UpdateSets24()
 
 void		TerEdit_Tx_UpdateSets32()							
 {	
-	if (teredit_tx_count>=(1+(teredit_tx_set-1)*max_teredit_tx_items)) 
-		{		
-			TerEdit_Tx_CopySkintoBmap(terrain_entity, 1+(teredit_tx_set-1)*max_teredit_tx_items, teredit_tx1_panel_bmp);
-		}
-	else
+	int first_texture_item = (teredit_tx_set - 1) * max_teredit_tx_items ;
+	
+	//---
+	
+	int i = 0;
+	
+	for (i=1; i<6; ++i)
 		{
-			TerEdit_Tx_EmptySlot32(teredit_tx1_panel_bmp);
+			int skin_num = i + first_texture_item;
+			
+			if (
+					(teredit_tx_count >= skin_num)
+					&&
+					(bmap_for_entity(terrain_entity, skin_num))
+				)
+				{
+					if (i==1)
+						{
+							TerEdit_Tx_CopySkintoBmap(terrain_entity, skin_num, teredit_tx1_panel_bmp);
+						}
+					else if (i==2)
+						{
+							TerEdit_Tx_CopySkintoBmap(terrain_entity, skin_num, teredit_tx2_panel_bmp);
+						}
+					else if (i==3)
+						{
+							TerEdit_Tx_CopySkintoBmap(terrain_entity, skin_num, teredit_tx3_panel_bmp);
+						}
+					else if (i==4)
+						{
+							TerEdit_Tx_CopySkintoBmap(terrain_entity, skin_num, teredit_tx4_panel_bmp);
+						}
+					else if (i==5)
+						{
+							TerEdit_Tx_CopySkintoBmap(terrain_entity, skin_num, teredit_tx5_panel_bmp);
+						}
+				}
+			else
+				{
+					if (i==1)
+						{
+							TerEdit_Tx_EmptySlot32(teredit_tx1_panel_bmp);
+						}
+					else if (i==2)
+						{
+							TerEdit_Tx_EmptySlot32(teredit_tx2_panel_bmp);
+						}
+					else if (i==3)
+						{
+							TerEdit_Tx_EmptySlot32(teredit_tx3_panel_bmp);
+						}
+					else if (i==4)
+						{
+							TerEdit_Tx_EmptySlot32(teredit_tx4_panel_bmp);
+						}
+					else if (i==5)
+						{
+							TerEdit_Tx_EmptySlot32(teredit_tx5_panel_bmp);
+						}					
+				}
 		}
 	
-	if (teredit_tx_count>=(2+(teredit_tx_set-1)*max_teredit_tx_items)) 
-		{
-			TerEdit_Tx_CopySkintoBmap(terrain_entity, 2+(teredit_tx_set-1)*max_teredit_tx_items, teredit_tx2_panel_bmp);
-		}
-	else
-		{
-			TerEdit_Tx_EmptySlot32(teredit_tx2_panel_bmp);
-		}
-		
-	if (teredit_tx_count>=(3+(teredit_tx_set-1)*max_teredit_tx_items))
-		{
-			TerEdit_Tx_CopySkintoBmap(terrain_entity, 3+(teredit_tx_set-1)*max_teredit_tx_items, teredit_tx3_panel_bmp);
-		}
-	else
-		{
-			TerEdit_Tx_EmptySlot32(teredit_tx3_panel_bmp);
-		}
-		
-	if (teredit_tx_count>=(4+(teredit_tx_set-1)*max_teredit_tx_items))
-		{
-			TerEdit_Tx_CopySkintoBmap(terrain_entity, 4+(teredit_tx_set-1)*max_teredit_tx_items, teredit_tx4_panel_bmp);
-		}
-	else
-		{
-			TerEdit_Tx_EmptySlot32(teredit_tx4_panel_bmp);
-		}
-		
-	if (teredit_tx_count>=(5+(teredit_tx_set-1)*max_teredit_tx_items))
-		{
-			TerEdit_Tx_CopySkintoBmap(terrain_entity, 5+(teredit_tx_set-1)*max_teredit_tx_items, teredit_tx5_panel_bmp);
-		}
-	else
-		{
-			TerEdit_Tx_EmptySlot32(teredit_tx5_panel_bmp);
-		}
-}		
+	//---
+//	
+//	if (teredit_tx_count>=(1+first_texture_item))
+//		{		
+//			TerEdit_Tx_CopySkintoBmap(terrain_entity, 1+first_texture_item, teredit_tx1_panel_bmp);
+//		}
+//	else
+//		{
+//			TerEdit_Tx_EmptySlot32(teredit_tx1_panel_bmp);
+//		}
+//	
+//	if (teredit_tx_count>=(2+first_texture_item)) 
+//		{
+//			TerEdit_Tx_CopySkintoBmap(terrain_entity, 2+first_texture_item, teredit_tx2_panel_bmp);
+//		}
+//	else
+//		{
+//			TerEdit_Tx_EmptySlot32(teredit_tx2_panel_bmp);
+//		}
+//		
+//	if (teredit_tx_count>=(3+first_texture_item))
+//		{
+//			TerEdit_Tx_CopySkintoBmap(terrain_entity, 3+first_texture_item, teredit_tx3_panel_bmp);
+//		}
+//	else
+//		{
+//			TerEdit_Tx_EmptySlot32(teredit_tx3_panel_bmp);
+//		}
+//		
+//	if (teredit_tx_count>=(4+first_texture_item))
+//		{
+//			TerEdit_Tx_CopySkintoBmap(terrain_entity, 4+first_texture_item, teredit_tx4_panel_bmp);
+//		}
+//	else
+//		{
+//			TerEdit_Tx_EmptySlot32(teredit_tx4_panel_bmp);
+//		}
+//		
+//	if (teredit_tx_count>=(5+first_texture_item))
+//		{
+//			TerEdit_Tx_CopySkintoBmap(terrain_entity, 5+first_texture_item, teredit_tx5_panel_bmp);
+//		}
+//	else
+//		{
+//			TerEdit_Tx_EmptySlot32(teredit_tx5_panel_bmp);
+//		}
+}
 
 
 ////////////////////////////////////////////
@@ -1009,6 +1081,11 @@ void		TerEdit_Tx_CopySkintoBmap(ENTITY* from_ent, var skin_num, BMAP* to_bmap)
 		{
 			return;
 //			to_bmap = bmap_create("panels\\_empty.tga");
+		}
+	
+	if (!bmap_for_entity(from_ent, skin_num))											
+		{
+			return;
 		}
 	
 //	bmap_blit(to_bmap,ent_getskin(from_ent, skin_num),nullvector,vector(bmap_width(to_bmap), bmap_height(to_bmap),0));
@@ -1049,6 +1126,11 @@ void		TerEdit_Tx_SetColor24()
 	
 	wait(3);
 	
+	if (!ent_getskin(terrain_entity, 1))											
+		{
+			return;
+		}
+	
 	var temp_size = minv(d3d_texlimit, teredit_tx_size);
 		
 //	TerEdit_Bmap_AdaptSize(ent_getskin(terrain_entity, 1), temp_size, 24, 888);
@@ -1074,6 +1156,11 @@ void		TerEdit_Tx_SetTexture24()
 	if (proc_status(TerEdit_Tx_SetTexture24) > (var)0) return;
 	
 	wait(3);
+	
+	if (!ent_getskin(terrain_entity, 1))											
+		{
+			return;
+		}
 	
 	var temp_size = minv(d3d_texlimit, teredit_tx_size);
 	
@@ -1126,15 +1213,27 @@ void		TerEdit_Tx_SetColor()
 {
 	wait(3);
 	
-	if (teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items > teredit_tx_count)	return;			// protection
+	int skin_int = teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items;
 	
-	TerEdit_Tx_Color( bmap_for_entity(terrain_entity , teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items) , vector(teredit_tx_blue,teredit_tx_green,teredit_tx_red) );
+	if (skin_int > teredit_tx_count)	return;																// protection
+	
+	if (!ent_getskin(terrain_entity, skin_int))											
+		{
+			return;
+		}
+	
+	TerEdit_Tx_Color( bmap_for_entity(terrain_entity , skin_int) , vector(teredit_tx_blue,teredit_tx_green,teredit_tx_red) );
 	wait_for(TerEdit_Tx_Color);
 }
 
 
 void		TerEdit_Tx_Color(BMAP* bmap_pointer, COLOR* to_color)				
 {
+	if (bmap_pointer == NULL)
+		{
+			return;
+		}
+	
 	var pixel_format  = bmap_lock(bmap_pointer,0);														// lock and get format
 	if (pixel_format >= 565) 
 		{
@@ -1170,15 +1269,27 @@ void		TerEdit_Tx_SetAlpha()
 {
 	wait(3);
 	
-	if (teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items > teredit_tx_count)	return;			// protection
+	int skin_int = teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items;
 	
-	TerEdit_Tx_Alpha( bmap_for_entity(terrain_entity , teredit_tx_selected+1+(teredit_tx_set-1)*max_teredit_tx_items) , teredit_tx_alpha );
+	if (skin_int > teredit_tx_count)	return;																// protection
+	
+	if (!ent_getskin(terrain_entity, skin_int))											
+		{
+			return;
+		}
+	
+	TerEdit_Tx_Alpha( bmap_for_entity(terrain_entity , skin_int) , teredit_tx_alpha );
 	wait_for(TerEdit_Tx_Alpha);
 }
 
 
 void		TerEdit_Tx_Alpha(BMAP* bmap_pointer, var to_alpha)			
 {
+	if (bmap_pointer == NULL)
+		{
+			return;
+		}
+	
 	var pixel_format  = bmap_lock(bmap_pointer,0);														// lock and get format
 	if (pixel_format >= 565) 
 		{

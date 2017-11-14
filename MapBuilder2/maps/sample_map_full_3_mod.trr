@@ -2,7 +2,7 @@
 2
 0
 32
-10
+8
 1
 1
 10
@@ -11,7 +11,7 @@ terrain_hmp\001dry_m0.hmp
 -8
 water_hmp\water4.hmp
 -
-400
+300
 250
 48
 0
@@ -22,4 +22,4 @@ water_hmp\water4.hmp
 0
 0
 0
-0.703
+0.701

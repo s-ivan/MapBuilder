@@ -169,7 +169,7 @@ void UI_Init()
 											temp_scsm_depth 	= scsm_maxdepth;
 											
 											Scsm_Close();
-											wait_for(Scsm_Close);												
+											wait_for(Scsm_Close);											
 										}
 								}
 							
@@ -2589,7 +2589,7 @@ void UI_DrawD3DGrid()
 					// y axis lines
 					
 					j = 0;
-					for (i = vMin.x; i <= vMax.x ; i += (var)GetMapTileSize() )
+					for (i = vMin.x; i <= vMax.x ; i += GetMapTileSize() )
 						{
 							// 2 intermediate lines to avoid colour fade through				
 							draw_line3d(nullvector,NULL,75);
@@ -2619,7 +2619,7 @@ void UI_DrawD3DGrid()
 					// x axis lines
 					
 					j = 0;
-					for (i = vMin.y; i <= vMax.y ; i += (var)GetMapTileSize() )
+					for (i = vMin.y; i <= vMax.y ; i += GetMapTileSize() )
 						{
 							// 2 intermediate lines to avoid colour fade through				
 							draw_line3d(nullvector,NULL,75);

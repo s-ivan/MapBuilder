@@ -1,6 +1,6 @@
 -1
 -
-sc_obj_sprite_stand_MB.fx
+-
 sc_obj_modelN_MB.fx
 -
 -
@@ -12,7 +12,7 @@ sc_obj_sky_MB.fx
 -
 -
 sc_obj_terrain7auto_MB.fx
-sc_obj_water_MB.fx
+sc_obj_waternr_MB.fx
 sc_obj_sprite_MB.fx
 sc_obj_sprite_MB.fx
 sc_obj_grass1_MB.fx

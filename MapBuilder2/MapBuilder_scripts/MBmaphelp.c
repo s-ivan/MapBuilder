@@ -14,26 +14,26 @@
 
 function XTileToCoord(int xtile)
 {
-	return ((var)xtile * (var)GetMapTileSize() 	- (var)GetMapTilesX() * 0.5 * (var)GetMapTileSize()) 	+ (var)GetMapTileSize() * 0.5;		// coord calc from origin		- origo shift		+ tile half compensation
+	return ((var)xtile * GetMapTileSize() 	- (var)GetMapTilesX() * 0.5 * GetMapTileSize()) 	+ GetMapTileSize() * 0.5;		// coord calc from origin		- origo shift		+ tile half compensation
 }
 
 
 function YTileToCoord(int ytile)
 {
-	return ((var)ytile * (var)GetMapTileSize() 	- (var)GetMapTilesY() * 0.5 * (var)GetMapTileSize()) 	+ (var)GetMapTileSize() * 0.5;
+	return ((var)ytile * GetMapTileSize() 	- (var)GetMapTilesY() * 0.5 * GetMapTileSize()) 	+ GetMapTileSize() * 0.5;
 }
 
 //---------------------
 
 int		XCoordToTile(var xcoord)
 {
-	return floor( (xcoord + (var)GetMapTilesX() * 0.5 * (var)GetMapTileSize()) / (var)GetMapTileSize() );
+	return floor( (xcoord + (var)GetMapTilesX() * 0.5 * GetMapTileSize()) / GetMapTileSize() );
 }
 
 
 int		YCoordToTile(var ycoord)
 {
-	return floor( (ycoord + (var)GetMapTilesY() * 0.5 * (var)GetMapTileSize()) / (var)GetMapTileSize() );
+	return floor( (ycoord + (var)GetMapTilesY() * 0.5 * GetMapTileSize()) / GetMapTileSize() );
 }
 
 //---------------------
@@ -215,7 +215,7 @@ int		GetMapZLevels()
 }
 
 
-int		GetMapTileSize()
+function	GetMapTileSize()
 {
 	return map_tilesize;
 }
@@ -366,7 +366,7 @@ void		SetMapZLevels(int levels)
 }
 
 
-void		SetMapTileSize(int tilesize)
+void		SetMapTileSize(var tilesize)
 {
 	map_tilesize = tilesize;
 }
@@ -528,7 +528,7 @@ void		SetMapDefaults()
 	
 	//----------------------	
 	
-	map_tilesize 		= MAP_DEFAULTGRIDSIZE;									// 32 is default
+	map_tilesize 		= (var)MAP_DEFAULTGRIDSIZE;							// 32 is default
 	map_clustersize 	= MAP_DEFAULTCLUSTERSIZE;								// 8 is default
 #ifndef MB_RELEASE	
 	map_mapzlevels 	= BUILDING_LEVELS;										// 2, or map specific: open field	0 , siege 1-2

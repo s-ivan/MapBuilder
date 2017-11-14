@@ -86,7 +86,7 @@ float4 ModelPS(inModelPS In): COLOR
    float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir));																// no saturate needed when normalized vectors used
       
    // diffuse   
-   float4 Diffuse = scsm_brightness * 5.0 * vecDiffuse * LightIntensity * vecSunColor * vecLight;						// vecSunDir is in view space thus not good here							
+   float4 Diffuse = scsm_brightness * 1.0 * vecDiffuse * LightIntensity * vecSunColor;						// vecSunDir is in view space thus not good here							
 	
 	// specular										
 	float4 Specular = 0;
@@ -94,11 +94,11 @@ float4 ModelPS(inModelPS In): COLOR
 		{
 			float3 Halfway  = saturate(dot(normalize(In.ViewDir - vecSunDir), In.WorldNormal));	
 					
-			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor * vecLight;					
+			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor;					
 		}
 	// specular - another calculation
 //	float3 Reflect = normalize(2 * LightIntensity * In.WorldNormal - In.SunDir);												// R
-//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor * vecLight;		// R.V^n 												
+//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor;		// R.V^n 												
 	
 	//----------------------------------------------------------
 	// texture - keep its alpha afterwards

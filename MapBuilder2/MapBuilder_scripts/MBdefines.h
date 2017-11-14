@@ -19,7 +19,7 @@
 // FLAG1 			- set for entities to be hidden in water mirror
 
 //------------------------------
-// groups usage in MapBuilder
+// collision groups usage in MapBuilder
 
 // .group = 1		- water terrain, camera objects, collider entities (shrub, obstacle)		- normally ignored by c-tracing
 // .group = 2		- terrain model																			- often detected by c-tracing															- together with 4

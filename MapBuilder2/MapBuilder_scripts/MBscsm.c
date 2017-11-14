@@ -23,6 +23,8 @@ sys_marker("scs");
 		}
 	wait(3);		
 	
+//	printf( "scsm stop");
+	
 	// ----------------------------
 	// initialization
 	
@@ -35,9 +37,11 @@ sys_marker("scs");
 	scsm_areasize		= maxv(scsm_areasize, 500);
 	scsm_areasize		= minv(scsm_areasize, 4000);
 	
-	scsm_maxdepth 		= 0.1 * scsm_areasize * 0.5;						// was ESM *1.25 ; VSM *1.5 because of * 1.5 in D3DXMatrixOrthoLH
+//	scsm_maxdepth 		= 0.1 * scsm_areasize * 0.5;						// should be commented out to not to modify saved value! // was ESM *1.25 ; VSM *1.5 because of * 1.5 in D3DXMatrixOrthoLH
 //	scsm_sundistance 	= scsm_areasize * 2.0;								// ÷÷÷ set exactly to area*1.25 or earlier 1.5 to avoid black area artifacts
 	scsm_sundistance 	= scsm_areasize * 1.25;
+	
+//	printf( "scsm init");
 	
 	// ----------------------------
 	// blur shader
@@ -45,7 +49,7 @@ sys_marker("scs");
 	Scsm_SetBlurType();
 	wait_for(Scsm_SetBlurType);
 	
-//	printf("scsm 1");
+//	printf( "scsm blur");
 	
 	// ----------------------------
 	// blur view
@@ -54,7 +58,19 @@ sys_marker("scs");
 	blurDepthView = view_create(-2);
 	set(blurDepthView,PROCESS_TARGET);
 	set(blurDepthView,CHILD);
+	
+//	set(blurDepthView,SHOW);		
+//	set(blurDepthView,UNTOUCHABLE);
+//	set(blurDepthView,NOSHADOW);	
+//	set(blurDepthView,NOPARTICLE);
+//	set(blurDepthView,NOCAST);			
+//	set(blurDepthView,SHADOW);			
+	
 	blurDepthView.material = sc_mtl_shadowBlur;
+	
+//	printf( "scsm blur view");
+	
+	wait(1);
 	
 	// ----------------------------	
 	// left-handed orthographic projection matrix
@@ -72,6 +88,8 @@ sys_marker("scs");
 	
 	mat_set(sc_mtl_shadowDepthSun.matrix, sc_orthoMat);
 	mat_effect1 = sc_orthoMat;
+	
+//	printf( "scsm matrix");
 	
 	// ----------------------------
 	// depth view
@@ -97,8 +115,8 @@ sys_marker("scs");
 //	set(shadowDepthView,ISOMETRIC);		//	not needed, could be used, but material matrix determines things... causes d3dlines casting shadows
 //	set(shadowDepthView,NOSKY);
 	
-////	set(shadowDepthView,NOLOD);			//¤¤¤ it should be used to avoid lod0 disappearing shadows when only e.g lod0 and lod1 model exist
-//													//¤¤ it ahppens only in case of large area (>2500) or low sun tilt (<30)
+//	set(shadowDepthView,NOLOD);			//¤¤¤ it should be used to avoid lod0 disappearing shadows when only e.g lod0 and lod1 model exist
+//													//¤¤ it happens only in case of large area (>2500) or low sun tilt (<30)
 //													//¤¤¤ but when used it is slower
 //													//¤¤¤ when not used, shadows are nicer because the lod0 model casts the shadow even when the lod3 is visible
 //													//¤¤¤ thus the shadow does not change when lod stage changes
@@ -117,11 +135,13 @@ sys_marker("scs");
 	shadowDepthView.size_x = scsm_resolution;
 	shadowDepthView.size_y = scsm_resolution;
 	
+//	printf( "scsm depth view");
+	
 	// ----------------------------
 	
 	sc_map_shadowDepthSun 	= bmap_createblack(scsm_resolution,scsm_resolution,14);		// 12 : 16 bit floating point format , 14 : 32 bit floating point format
 	
-//	printf("scsm 2");
+//	printf( "scsm resolution");
 	
 	// ----------------------------
 	//setup blur view
@@ -131,6 +151,10 @@ sys_marker("scs");
 	
 	shadowDepthView.stage 	= blurDepthView;
 	blurDepthView.bmap 		= sc_map_shadowDepthSun;
+	
+//	printf( "scsm chain");
+	
+	wait(1);
 	
 	// ----------------------------
 	//set depthmap depth
@@ -228,7 +252,7 @@ sys_marker("scs");
 	}
 	
 	Scsm_Close();	
-
+	
 sys_marker(NULL);
 }
 
@@ -238,10 +262,15 @@ sys_marker(NULL);
 
 void Scsm_Close()
 {
-	scsm_run = 0;
+	//----------------------------------
 	
 	proc_kill2(Scsm_Start, NULL);
-	wait(1);
+	wait(3);
+
+	scsm_run = 0;
+//	wait(3);
+		
+//	printf( "scsm killed");
 	
 	//---------------------------------
 	// blur view
@@ -254,12 +283,14 @@ void Scsm_Close()
 				{
 					bmap_purge(blurDepthView->bmap);
 					ptr_remove(blurDepthView->bmap);
-				}
-			blurDepthView->bmap = NULL;
+					blurDepthView->bmap = NULL;
+				}			
 			
 			ptr_remove(blurDepthView);
 			blurDepthView = NULL;
 		}
+	
+//	printf( "blur view freed");
 	
 	//----------------------------------
 	// depth view
@@ -268,26 +299,30 @@ void Scsm_Close()
 	
 	if (shadowDepthView != NULL)
 		{
-			if (shadowDepthView->bmap)
+			if (shadowDepthView->bmap != NULL)
 				{
 					bmap_purge(shadowDepthView->bmap);
 					ptr_remove(shadowDepthView->bmap);
-				}
-			shadowDepthView->bmap = NULL;
+					shadowDepthView->bmap = NULL;
+				}			
 				
 			ptr_remove(shadowDepthView);
 			shadowDepthView = NULL;
 		}	
 	
+//	printf( "depth view freed");
+	
 	//---------------------------------
 	// depthmap
 	
-	if (sc_map_shadowDepthSun)
+	if (sc_map_shadowDepthSun != NULL)
 		{
 			bmap_purge(sc_map_shadowDepthSun);
 			ptr_remove(sc_map_shadowDepthSun);
 			sc_map_shadowDepthSun = NULL;
 		}	
+	
+//	printf( "depth map freed");
 	
 	//----------------------------------
 	
@@ -300,6 +335,8 @@ void Scsm_Close()
 	mat_effect3 = 0;
 	
 //	printf("scsm freed");
+	
+	//----------------------------------
 }
 
 
@@ -474,14 +511,16 @@ void		Scsm_Load_ssc(char* file_name)
 			
 			//------------------
 			// new new parameter
-			temp_scsm_lod					= file_var_read(file_handle)-1;		// new lod, no eof check because can be 0, btu it's fine, used as pssm_lod, shifted by 1
+			temp_scsm_lod					= file_var_read(file_handle) - 1;	// new lod, no eof check because can be 0, btu it's fine, used as pssm_lod, shifted by 1
 			
 			//------------------
 			// new new new parameter
 			temp_scsm_fadeout_start		= file_var_read(file_handle);
 			
 			//------------------
-						
+			
+//			printf("scsm file loaded");
+			
 			file_close(file_handle);	
 		}
 	//---------------------------------------------
@@ -489,16 +528,23 @@ void		Scsm_Load_ssc(char* file_name)
 	
 	//------------------
 	// stop shadowmapping
-	if (shadow_stencil == (var)-1)														// with file version protection
+	
+	if (shadow_stencil == (var)-1)										// with file version protection
 		{
 			if ((temp_scsm_maxdepth > 0) && (temp_scsm_esm > 0))
 				{
-					Scsm_Close();
-					wait_for(Scsm_Close);					
+					scsm_run 			= 0;	
+//					Scsm_Close();												// NO! caused the crash because of double stopping and accessing memory...
+//					wait_for(Scsm_Close);
+					wait(10);				
 				}
+				
+//			printf("scsm stopped");
 		}
+	
 	//------------------
 	// apply parameters read
+	
 	scsm_maxdepth				= temp_scsm_maxdepth;
 			
 	scsm_blurpixel				= temp_scsm_blurpixel;
@@ -517,9 +563,13 @@ void		Scsm_Load_ssc(char* file_name)
 	
 	scsm_lod						= temp_scsm_lod;					
 	
-	scsm_fadeout_start		= temp_scsm_fadeout_start;		
+	scsm_fadeout_start		= temp_scsm_fadeout_start;	
+	
+//	printf("scsm loaded values applied");
+		
 	//------------------
 	// restart shadowmapping
+	
 	if (shadow_stencil == (var)-1)														// with file version protection
 		{
 			if ((temp_scsm_maxdepth > 0) && (temp_scsm_esm > 0))
@@ -528,7 +578,10 @@ void		Scsm_Load_ssc(char* file_name)
 					wait(15);																	// needs time to start...
 					scsm_maxdepth 				= temp_scsm_maxdepth;					// needs to be set again after starting shadowmapping !!!
 				}
+			
+//			printf("scsm restarted");
 		}
+	
 	//---------------------------------------------
 	
 //	printf( "Scsm Settings Loaded: %s" , _chr(file_name) );

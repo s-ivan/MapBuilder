@@ -117,22 +117,35 @@ void Exit_Event()
 
 
 ////////////////////////////////////
-//void ScreenSize_Event() // adapt the engine resolution to the window size - not needed now
-//{
-////   RECT r;
-////   GetClientRect(hWnd,&r); 
-////   video_set(r.right,r.bottom,0,0); 
-//	if (video_screen==(var)1)		// if fullscreen
+// adapt the engine resolution to the window size - not needed now
+
+
+void ScreenSize_Event() 			
+{
+	if (video_screen==(var)2)								// if windowed
+		{
+		   RECT r;
+   		GetClientRect(hWnd,&r); 
+   		video_set(r.right,r.bottom,0,0); 
+   	}
+	
+	// it should adapt here panel positions within screen area !!!
+	
+	//...
+	
+	//-----------------------------------------------------
+//	// switch mode on maximize?
+//	if (video_screen==(var)1)								
 //		{
 //			video_switch(8,0,0);
-//			video_switch(0,0,2);		// mode , 0 , window
+//			video_switch(0,0,2);								// mode , 0 , window
 //		}
-//	else									// if windowed
+//	else															// if windowed
 //		{
 //			video_switch(main_videomode,0,0);
 //			video_switch(0,0,1);
 //		}
-//}
+}
 
 
 ////////////////////////////////////

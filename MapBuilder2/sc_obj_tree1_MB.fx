@@ -4,7 +4,7 @@ bool AUTORELOAD;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // defines
 
-//#define PER_PIXEL_LIGHTS						
+#define PER_PIXEL_LIGHTS						
 //#define PER_PIXEL_LIGHTS_LOD
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@ float4 vecSunColor;
 float4 vecSunDir;
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -43,6 +43,10 @@ float4 vecSkill41;
 
 #ifdef HEIGHT_FOG
 	#include "sc_heightfog_MB.fx"			// blend distance fog with height fog
+#endif
+
+#ifdef DEBUG_TILE
+	#include "rts_tiledarea_MB.fx"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +107,7 @@ technique animtree1_lod2
 		AlphaTestEnable 	= True;
 	   AlphaBlendEnable 	= False;
    	
-		VertexShader = compile vs_3_0 ModelVS2();
+		VertexShader = compile vs_3_0 ModelVS2B();
      	PixelShader  = compile ps_3_0 ModelPS2();
    }
 

@@ -22,7 +22,7 @@ float4 vecSunColor;
 float4 vecSunDir;	
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -205,21 +205,21 @@ float4 TerrainLmPS(inTerrainPS In) : COLOR0
    //----------------------------------------------------------
    // Sun lighting
    
-   float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir)) * Shadow;
+   float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir));
       
    // diffuse   
-   float4 Diffuse = 8.0 * vecDiffuse * LightIntensity * vecSunColor * vecLight;																		
+   float4 Diffuse = 1.0 * vecDiffuse * LightIntensity * vecSunColor;																		
 	
 	// specular										
 	float4 Specular = 0;
 //	if (LightIntensity > 0.25f)
 		{
 			float3 Halfway  = saturate(dot(normalize(In.ViewDir - vecSunDir), In.WorldNormal));			
-			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor * vecLight;					
+			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor;					
 		}
 	// specular - another calculation
 //	float3 Reflect = normalize(2 * LightIntensity * In.WorldNormal - In.SunDir);													// R
-//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor * vecLight;			// R.V^n 													
+//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor;			// R.V^n 													
 	
 	//----------------------------------------------------------
 	// color
@@ -314,7 +314,13 @@ float4 TerrainLmPS(inTerrainPS In) : COLOR0
 	
 	float4 Lightmap = 2.0 * tex2D(LightMapSampler, In.Tex);										// 1.0 * for L3DT lightmap, 2.0 * for 3dgs lightmap
 	Color.rgb *= clamp(Lightmap, scsm_lightmapalpha_var, 1);
-		
+	
+	//----------------------------------------------------------
+	// add shadows
+	
+//	Color.rgb *= lerp(scsm_shadowcolor.rgb, 1, Shadow);											// dynamic shadows
+	Color.rgb *= Shadow;
+	
 	//----------------------------------------------------------
 	// add fog
 	
@@ -352,21 +358,21 @@ float4 TerrainPS(inTerrainPS In) : COLOR0
    //----------------------------------------------------------
    // lighting
    
-   float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir)) * Shadow;
+   float LightIntensity = saturate(dot(In.WorldNormal, -vecSunDir));
       
    // diffuse   
-   float4 Diffuse = 8.0 * vecDiffuse * LightIntensity * vecSunColor * vecLight;																	
+   float4 Diffuse = 1.0 * vecDiffuse * LightIntensity * vecSunColor;																	
 	
 	// specular										
 	float4 Specular = 0;
 //	if (LightIntensity > 0.25f)
 		{
 			float3 Halfway  = saturate(dot(normalize(In.ViewDir - vecSunDir), In.WorldNormal));			
-			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor * vecLight;			
+			Specular = vecSpecular * pow( dot(In.WorldNormal, 	Halfway), fPower) * vecSunColor;			
 		}
 	// specular - another calculation
 //	float3 Reflect = normalize(2 * LightIntensity * In.WorldNormal - In.SunDir);													// R
-//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor * vecLight;			// R.V^n 												
+//	float4 Specular = vecSpecular * pow(saturate(dot(Reflect, In.ViewDir)), fPower) * vecSunColor;			// R.V^n 												
 	
 	//----------------------------------------------------------
 	// color
@@ -455,7 +461,13 @@ float4 TerrainPS(inTerrainPS In) : COLOR0
 #else
 	Color.rgb *= (Diffuse + Specular + In.Color);				
 #endif
-		
+	
+	//----------------------------------------------------------
+	// add shadows
+	
+//	Color.rgb *= lerp(scsm_shadowcolor.rgb, 1, Shadow);											// dynamic shadows
+	Color.rgb *= Shadow;
+	
 	//----------------------------------------------------------
 	// add fog
 	

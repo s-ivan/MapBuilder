@@ -4,7 +4,8 @@ bool AUTORELOAD;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // defines
 
-//#define PER_PIXEL_LIGHTS				
+#define PER_PIXEL_LIGHTS				
+#define PER_PIXEL_LIGHTS_LOD
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // matrices, vectors, variables passed by the engine
@@ -22,7 +23,7 @@ float4 vecSunColor;
 float4 vecSunDir;
 float4 vecSunPos;
 
-float4 vecLight;
+//float4 vecLight;
 float4 vecColor;
 float4 vecAmbient;
 float4 vecDiffuse;
@@ -103,8 +104,8 @@ technique bone_model_lod1
 		AlphaTestEnable 	= False;
 	   AlphaBlendEnable 	= False;
 	   
-		VertexShader = compile vs_3_0 BonesVS2();
-     	PixelShader  = compile ps_3_0 BonesPS2();
+		VertexShader = compile vs_3_0 BonesVS1();
+     	PixelShader  = compile ps_3_0 BonesPS1();
    }
 	
 }
@@ -136,9 +137,6 @@ technique bone_model_lod3
 //   	ZWriteEnable 		= True;
 		AlphaTestEnable 	= False;
 	   AlphaBlendEnable 	= False;
-	   
-//		VertexShader = compile vs_3_0 BonesVS2();
-//		PixelShader  = compile ps_3_0 BonesPS2();
    }
 
 }

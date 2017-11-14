@@ -9,7 +9,7 @@
 //----------------------
 // ray-tracing
 
-function PosInfo3D0(var tempx, var tempy);								// detect evrything
+function PosInfo3D0(var tempx, var tempy);								// detect everything
 
 function PosInfo3D1(var tempx, var tempy);								// detect terrain (and blocks)											- object placement onto terrain (for terrainmdl)
 																						// ignore:

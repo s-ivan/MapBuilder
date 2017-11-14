@@ -100,7 +100,7 @@ BMAP* sc_bmap_waterFresnel = "water_hmp\\sc_waterFresnel.bmp";
 //////////////////////////////////////////////////////////////
 // event
 
-void sc_mtlEvent_water()
+function sc_mtlEvent_water()
 {
 //	mtl.skill1 = floatv(-1.0);
 	

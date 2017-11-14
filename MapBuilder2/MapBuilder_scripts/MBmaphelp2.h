@@ -5,6 +5,8 @@
 ///////////////////////////////////////////////////////////////////////
 // functions
 
+// lookup arrays could fasten neighbour checks !!!
+
 //------------
 // angle and direction conversions - mod to angle/45 directions
 

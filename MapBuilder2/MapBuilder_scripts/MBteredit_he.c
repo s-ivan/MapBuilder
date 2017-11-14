@@ -1043,49 +1043,16 @@ void		TerEdit_Save_Hmp(char* file_name)								// file name with path
 	
 	// DEFORM TERRAIN by Markus Wiedenmeyer for the summer contest 2010 - based script
 	long my_size;
-//	STRING* temp_str_1 = "#100";
 	
-//	c_updatehull(terrain_entity,0);											// just for safety - might be needed again
-//#ifndef A8
-//	wait(1);
-//	ent_fixnormals(terrain_entity,0);										// A7 okay with 0
-//#else
-//	for(i=0;i<ent_status(terrain_entity,16);i++) 
-//		{ 
-//			ent_fixnormals(terrain_entity,i); 
-//		}
-//#endif
-//	wait(1);
-	
-	TerrHmp_FixNormals();											// setmesh updates hull too , but not bounding box
-	wait_for(TerrHmp_FixNormals);									// slow but better to run it
+	TerrHmp_FixNormals();														// setmesh updates hull too , but not bounding box
+	wait_for(TerrHmp_FixNormals);												// slow but better to run it
 	wait(1);
 
-#ifndef A8	
-//	LPD3DXMESH dx_mesh;
-	for (i=0; i<(var)(ent_status(terrain_entity,16)); i++)
-		{
-			dx_mesh = ent_getmesh(terrain_entity,i,0);		// ent , chunk start with 0 , lod
-			D3DXComputeNormals(dx_mesh,NULL);
-			ent_setmesh(terrain_entity,dx_mesh,i,0);			// maybe it works with A7 - if not it can be removed
-		}
-	wait(1);
-//	c_setminmax(terrain_entity);									// if no previous fixnormals called
-//	wait(1);
-#endif
-
+#ifndef MBTEREDIT_USENEWDLL
 sys_marker("T01");	
 	dll_init_terrain();															// init the terrain dll	
 sys_marker(NULL);
-	
-//	// setting entity path and filename - not needed
-//sys_marker("T02");
-//	dll_path_set_subfolder(_str(""));										// needed?
-//sys_marker(NULL);	
-//	
-//sys_marker("T03");
-//	temp_str_1 = dll_path_from_entity(terrain_entity,FALSE);			// needed?
-//sys_marker(NULL);
+#endif
 	
 	//_--------------------------------
 	str_cpy(temp_str_1,file_name);											// overwrite - use MB filename handling
@@ -1109,14 +1076,16 @@ sys_marker(NULL);
 	str_cpy(temp_str_1,file_name);											// overwrite - was modified to .bak, so set it again
 	//-----------------------------------
 
-//#ifndef A8	
-	for (i=1; i<=ent_status(terrain_entity,0); i++)            // A7 convert to world coordinates...
-		{
-			CONTACT* c = ent_getvertex(terrain_entity,NULL,i);
-			c.v.y += terrain_entity.z;
-			ent_setvertex(terrain_entity,c,i);
-		}
-//#endif
+#ifndef MBTEREDIT_USENEWDLL
+
+////#ifndef A8	
+//	for (i=1; i<=ent_status(terrain_entity,0); i++)        			// A7 convert to world coordinates... in A8 needed ???
+//		{
+//			CONTACT* c = ent_getvertex(terrain_entity,NULL,i);
+//			c.v.y += terrain_entity.z;
+//			ent_setvertex(terrain_entity,c,i);
+//		}
+////#endif
 
 sys_marker("T05");		
 	dll_load_terrain_from_entity( terrain_entity );                // save the terrain
@@ -1134,14 +1103,14 @@ sys_marker("T06");																// A7 - in case of flatten terrain it results 
 		}
 sys_marker(NULL);
 		
-//#ifndef A8
-	for (i=1; i<=ent_status(terrain_entity,0); i++)            // A7 convert back to local coordinates...
-		{
-			CONTACT* c = ent_getvertex(terrain_entity,NULL,i);
-			c.v.y -= terrain_entity.z;
-			ent_setvertex(terrain_entity,c,i);
-		}
-//#endif
+////#ifndef A8
+//	for (i=1; i<=ent_status(terrain_entity,0); i++)            		// A7 convert back to local coordinates... in A8 needed???
+//		{
+//			CONTACT* c = ent_getvertex(terrain_entity,NULL,i);
+//			c.v.y -= terrain_entity.z;
+//			ent_setvertex(terrain_entity,c,i);
+//		}
+////#endif
 	
 sys_marker("T07");
 	dll_close_terrain();
@@ -1149,6 +1118,21 @@ sys_marker(NULL);
 
 	TerrHmp_FixNormals();
 	wait_for(TerrHmp_FixNormals);
+
+#else
+	
+	int okay = save_hmp(_chr(temp_str_1), terrain_entity, 1); 
+
+	if (okay == (var)1)
+		{  
+//			printf("Saved");
+		}
+	else
+		{
+			printf("DLL Error: Terrain is NOT saved");
+		}
+	
+#endif
 	
 	//------------------------------------------------
 	reset( map_loadpanel , SHOW); 

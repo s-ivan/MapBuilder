@@ -11,7 +11,7 @@ void	Settings_Init()
 	//--------------------------------------
 	// mapadjustable parameters
 	
-	settings_tilesize					= (var)GetMapTileSize();
+	settings_tilesize					= GetMapTileSize();
 	settings_clustersize				= (var)GetMapClusterSize();
 	
 	settings_maptilesx				= (var)GetMapTilesX();
@@ -385,7 +385,7 @@ void		Settings_Ok()
 	SetMapTilesY(settings_maptilesy);													// requires regenerating map arrays (or reload)
 	
 #ifndef MB_RELEASE	
-	play02_map_tilesize	= (var)GetMapTileSize();									// variables read by RTS debug shaders
+	play02_map_tilesize	= GetMapTileSize();											// variables read by RTS debug shaders
 	play02_map_maptilesx	= (var)GetMapTilesX();
 	play02_map_maptilesy	= (var)GetMapTilesY();
 #endif
